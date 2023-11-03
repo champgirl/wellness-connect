@@ -1,5 +1,5 @@
 <template>
-    <Title>JPT | Home</Title>
+    <Title>JPT | Chat</Title>
     <div class="container">
         <div class="main-column">
             <div class="completion">
@@ -13,7 +13,7 @@
                     </div>
                     <div v-else-if="message.role === ChatCompletionRequestMessageRoleEnum.Assistant"
                         class="message assistant-message">
-                        <NuxtMarkdown :markdownText="message.content" />
+                        <NuxtMarkdown :markdownText="message.content as string" />
                     </div>
                 </div>
                 <div class="message assistant-message" v-if="processing && completion !== ''">
@@ -44,12 +44,9 @@
     </div>
 </template>
 <script setup lang="ts">
-import { GPTChat, HttpResponse } from "@/types";
-import {
-    ChatCompletionRequestMessage,
-    ChatCompletionRequestMessageRoleEnum,
-    ChatCompletionResponseMessage
-} from "openai";
+import type { GPTChat, HttpResponse } from "@/types";
+import { ChatCompletionRequestMessageRoleEnum } from "openai";
+import type { ChatCompletionResponseMessage, ChatCompletionRequestMessage } from 'openai';
 
 const completion = ref('')
 const textInput = ref('')
@@ -147,9 +144,10 @@ async function getChatCompletion() {
             alert("Server is offline")
             loading.value = false
         }
-    )
+    ) as any; // Warning check
 
     const reader = response.getReader()
+
     // @ts-ignore
     reader.read().then(function processText({ done, value }) {
         if (done) {
@@ -163,16 +161,7 @@ async function getChatCompletion() {
 }
 
 onMounted(() => {
-    const sendButton = document.getElementById('sendCompletionRequest')
-    const textArea = document.querySelector('.textarea')
 
-    // @ts-ignore
-    textArea?.addEventListener('keydown', (e: any) => {
-        if (e.key === 'Enter' && !e.shiftKey) {
-            e.preventDefault()
-            sendButton?.click()
-        }
-    })
 })
 </script>
 <style scoped lang="scss">

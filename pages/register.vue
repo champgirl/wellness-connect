@@ -12,9 +12,10 @@ const studentRegister = resolveComponent('StudentRegister')
 const route = useRoute();
 const who = ref(route.query.user);
 
-onBeforeRouteUpdate((newRoute) => {
-   who.value = newRoute.query.user
-})
+onBeforeRouteUpdate(
+   (newRoute) => {
+      who.value = newRoute.query.user
+   })
 </script>
 
 <style lang="scss">

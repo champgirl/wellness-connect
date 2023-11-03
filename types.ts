@@ -1,4 +1,4 @@
-import { ChatCompletionRequestMessage } from "openai/api";
+import type { ChatCompletionRequestMessage } from "openai/api";
 import { H3Event } from "h3";
 
 export enum user {
