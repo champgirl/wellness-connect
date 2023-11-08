@@ -1,4 +1,5 @@
-import type { ChatCompletionRequestMessage } from "openai/api";
+import {openai} from "~/mvc/external/OpenAi";
+import {ChatCompletionMessageParam} from "openai/src/resources/chat/completions";
 import { H3Event } from "h3";
 
 export enum user {
@@ -7,41 +8,38 @@ export enum user {
 }
 
 export type GPTChat = {
-    model: string;
-    messages: ChatCompletionRequestMessage[];
-    temperature: number;
-    n: number,
-    max_tokens: number,
+    model: "gpt-3.5-turbo";
+    messages: ChatCompletionMessageParam[];
 }
 
-export class GPTChatQueueItem {
-    private readonly _event: H3Event;
-    private readonly _gptChat: GPTChat;
-    private headersSent: boolean = false;
+class Stream {
+    private headersSent: boolean;
+    private _event: H3Event;
 
-    constructor(event: H3Event, gptChat: GPTChat) {
+    constructor(event: H3Event) {
+        this.headersSent = false;
         this._event = event;
+        this.flushHeaders()
+    }
+
+    flushHeaders() {
         if (!this.headersSent) {
-            // set header to text/event-stream
             this._event.node.res.setHeader('Content-Type', 'text/event-stream');
-            // set header to no cache
             this._event.node.res.setHeader('Cache-Control', 'no-cache');
-            // set header to keep connection alive
             this._event.node.res.setHeader('Connection', 'keep-alive');
-            // flush headers
             this._event.node.res.flushHeaders();
             this.headersSent = true;
         } else {
             console.warn("Headers already sent")
         }
 
+        this._event.node.res.flushHeaders();
+
         const response = {} as HttpResponse
         response.statusCode = 204
         response.body = "Processing"
 
         this._event.node.res.write(JSON.stringify(response))
-
-        this._gptChat = gptChat;
     }
 
     write(chunk: any) {
@@ -51,11 +49,51 @@ export class GPTChatQueueItem {
     end() {
         this._event.node.res.end();
     }
+}
 
-    get gptChat(): GPTChat {
-        return this._gptChat;
+
+export class GPTChatQueueItem {
+    private readonly _gptChat: GPTChat;
+    private readonly _stream: Stream;
+
+    constructor(event: H3Event, gptChat: GPTChat) {
+        this._stream = new Stream(event)
+        this._gptChat = gptChat;
+    }
+
+    async stream() {
+        try {
+            const completion = await openai.chat.completions.create({
+                ...this._gptChat,
+                stream: true
+            })
+
+            for await (const chunk of completion) {
+                console.log(chunk)
+                this._stream.write(JSON.stringify(
+                    {
+                        statusCode: 201,
+                        body: chunk.choices[0].delta.content
+                    } as HttpResponse
+                ))
+            }
+
+            this._stream.end()
+        } catch (e: any) {
+            this._stream.write(JSON.stringify(
+                {
+                    statusCode: 500,
+                    body: e?.message ?? "Unknown error"
+                } as HttpResponse
+            ))
+            this._stream.end();
+        }
     }
 }
+
+
+
+
 
 export type HttpResponse = {
     statusCode: number;
@@ -72,4 +110,11 @@ export type UserStateType = {
 
 export type UserCookie = {
     bearer: String
+}
+
+export type CounselorRegister = {
+    name: string,
+    email: string,
+    password: string,
+    contact: string
 }

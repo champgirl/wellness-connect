@@ -34,7 +34,7 @@
                     <div>
                         <textarea class="textarea" type="text" placeholder="Type your message here..."
                             v-model="textInput"></textarea>
-                        <button class="button" :class="{ 'is-loading': loading, 'is-success': processing }"
+                        <button class="button is-success" :class="{ 'is-loading': loading, 'is-success': processing }"
                             @click="getChatCompletion" id="sendCompletionRequest">Send
                         </button>
                     </div>
@@ -57,7 +57,7 @@ const prompt = reactive<GPTChat>({
     messages: [
         {
             role: ChatCompletionRequestMessageRoleEnum.System,
-            content: "You are ChatGPT, a large language model trained by OpenAI. Carefully heed the user's instructions. Respond using Markdown. When told to write code, enclose it in backticks. use MathJax for mathematical expressions."
+            content: "You are a students' mental health assistant, respond empathically and supportively when the user wants to talk to you. Respond in markdown. If someone asks about anything else that has nothing to do with mental health, respond with 'I cannot help you with that'. If you think someone wants to end their life or harm themselves(suicide) or anyone, start your response with ‼"
         }
     ]
 })
@@ -134,10 +134,10 @@ async function getChatCompletion() {
     }
 
     // WARNING: Do not use inbuilt useFetch because it sends the request twice. Once in SSR and Client both.
-    const response = await $fetch('/api/chat/gpt', {
+    const response = await $fetch('api/chat/gpt', {
         method: 'POST',
         body: prompt,
-        responseType: 'stream',
+        responseType: 'stream'
     }).catch(
         (error) => {
             console.log(error)
@@ -161,7 +161,16 @@ async function getChatCompletion() {
 }
 
 onMounted(() => {
+    const sendButton = document.getElementById('sendCompletionRequest')
+    const textArea = document.querySelector('.textarea')
 
+    // @ts-ignore
+    textArea?.addEventListener('keydown', (e: any) => {
+        if (e.key === 'Enter' && !e.shiftKey) {
+            e.preventDefault()
+            sendButton?.click()
+        }
+    })
 })
 </script>
 <style scoped lang="scss">
@@ -181,9 +190,6 @@ onMounted(() => {
         width: 700px;
     }
 
-    ;
-
-
     .query {
         position: fixed;
         height: 5ch;
@@ -201,26 +207,37 @@ onMounted(() => {
                 position: relative;
 
                 .textarea {
+                    min-height: unset;
+                    min-width: unset;
                     max-width: 80vw;
                     max-width: 80dvw;
                     width: 500px;
+                    overflow: hidden;
+                    resize: none;
+                    height: fit-content;
                     margin: auto;
                     font-family: 'Roboto Mono', monospace;
                     font-size: 0.9em;
                     border-radius: 5px;
                     padding-left: 0.5em;
                     padding-top: 0.5em;
+                    margin-top: -20px;
                 }
 
                 .button {
                     border: none;
-                    height: 5ch;
+                    position: absolute;
+                    left: calc(50vw + 250px);
                     margin-top: 0.6px;
                     background-color: transparent;
                     color: hsl(0, 0%, 0%, 0.5);
+                    transform: translateX(-120%);
+                    opacity: 0.5;
+                    margin-top: -20px;
 
                     &:hover {
                         cursor: pointer;
+                        opacity: 1;
                         color: hsl(0, 0%, 0%, 0.8);
                     }
 
@@ -313,17 +330,11 @@ onMounted(() => {
             }
 
             &.system-message {
-                background-color: #462341;
+                background-color: var(--accent);
                 border-radius: 5px 5px 5px 5px;
             }
         }
     }
-}
-
-
-button {
-    padding: 0.2em 0.7em;
-    position: relative;
 }
 
 .code-container {
