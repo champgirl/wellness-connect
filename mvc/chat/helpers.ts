@@ -1,7 +1,7 @@
-import { stream } from "~/mvc/external/OpenAi";
-import { allowedChatInterval, GPTChatQueueItem } from "~/types";
+import { allowedChatInterval } from "~/types";
 import type { GPTChat } from '~/types';
 import { H3Event } from "h3";
+import {GPTChatQueueItem} from "~/classes.server";
 
 declare global {
     var gptChatQueue: GPTChatQueueItem[]
@@ -9,17 +9,10 @@ declare global {
 }
 
 async function ProcessQueue() {
-    let setProcessingInterval = setInterval(async () => {
-        if (global.gptChatQueue.length > 0) {
-            global.processingGPTChat = true
-            const gptChatITem = global.gptChatQueue.shift()
-            
-            if (gptChatITem) await stream(gptChatITem)
-        } else if (global.gptChatQueue.length === 0) {
-            global.processingGPTChat = false
-            clearInterval(setProcessingInterval)
-        }
-    }, allowedChatInterval)
+    for await(const item of global.gptChatQueue){
+        item.stream()
+        await new Promise(resolve => setTimeout(resolve, allowedChatInterval))
+    }
 }
 
 export async function addRequestToGlobalProcessingQueue(event: H3Event, gptChat: GPTChat) {

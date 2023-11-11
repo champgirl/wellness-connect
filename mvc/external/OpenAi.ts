@@ -1,4 +1,5 @@
-import {OpenAI, ClientOptions} from "openai";
+import {OpenAI} from "openai";
+import  type {ClientOptions} from "openai";
 
 const configuration = {
     apiKey: process.env.OPENAI_API_KEY

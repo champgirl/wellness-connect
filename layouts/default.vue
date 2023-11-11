@@ -67,7 +67,7 @@ import { user } from '~/types'
     --normal-font-size: 1rem;
     --small-font-size: .9rem;
     --font-medium: 500;
-    --accent: hsl(283, 79%, 84%);
+    --accent: hsl(280,57%,64%);
     --primary: hsl(223, 35%, 44%);
 }
 

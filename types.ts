@@ -1,9 +1,7 @@
-import {openai} from "~/mvc/external/OpenAi";
-import {ChatCompletionMessageParam} from "openai/src/resources/chat/completions";
-import { H3Event } from "h3";
+import type {ChatCompletionMessageParam} from "openai/src/resources/chat/completions";
 
 export enum user {
-    COUNSELOR = 'counsilor',
+    COUNSELOR = 'counselor',
     STUDENT = 'student'
 }
 
@@ -11,89 +9,6 @@ export type GPTChat = {
     model: "gpt-3.5-turbo";
     messages: ChatCompletionMessageParam[];
 }
-
-class Stream {
-    private headersSent: boolean;
-    private _event: H3Event;
-
-    constructor(event: H3Event) {
-        this.headersSent = false;
-        this._event = event;
-        this.flushHeaders()
-    }
-
-    flushHeaders() {
-        if (!this.headersSent) {
-            this._event.node.res.setHeader('Content-Type', 'text/event-stream');
-            this._event.node.res.setHeader('Cache-Control', 'no-cache');
-            this._event.node.res.setHeader('Connection', 'keep-alive');
-            this._event.node.res.flushHeaders();
-            this.headersSent = true;
-        } else {
-            console.warn("Headers already sent")
-        }
-
-        this._event.node.res.flushHeaders();
-
-        const response = {} as HttpResponse
-        response.statusCode = 204
-        response.body = "Processing"
-
-        this._event.node.res.write(JSON.stringify(response))
-    }
-
-    write(chunk: any) {
-        this._event.node.res.write(chunk);
-    }
-
-    end() {
-        this._event.node.res.end();
-    }
-}
-
-
-export class GPTChatQueueItem {
-    private readonly _gptChat: GPTChat;
-    private readonly _stream: Stream;
-
-    constructor(event: H3Event, gptChat: GPTChat) {
-        this._stream = new Stream(event)
-        this._gptChat = gptChat;
-    }
-
-    async stream() {
-        try {
-            const completion = await openai.chat.completions.create({
-                ...this._gptChat,
-                stream: true
-            })
-
-            for await (const chunk of completion) {
-                console.log(chunk)
-                this._stream.write(JSON.stringify(
-                    {
-                        statusCode: 201,
-                        body: chunk.choices[0].delta.content
-                    } as HttpResponse
-                ))
-            }
-
-            this._stream.end()
-        } catch (e: any) {
-            this._stream.write(JSON.stringify(
-                {
-                    statusCode: 500,
-                    body: e?.message ?? "Unknown error"
-                } as HttpResponse
-            ))
-            this._stream.end();
-        }
-    }
-}
-
-
-
-
 
 export type HttpResponse = {
     statusCode: number;
@@ -108,13 +23,65 @@ export type UserStateType = {
     is_admin: String
 }
 
-export type UserCookie = {
-    bearer: String
-}
 
 export type CounselorRegister = {
     name: string,
     email: string,
     password: string,
     contact: string
+}
+
+export type StudentRegister = {
+    name: string,
+    email: string,
+    password: string,
+    contact: string,
+    reg_no: string
+}
+
+export type LoginCredentials = {
+    email: string;
+    password: string;
+}
+
+
+export type RegisterCredentials = StudentRegister | CounselorRegister
+
+export type RegistrationError = {
+    error?: any;
+    message: string;
+}
+
+export type APIResponse = {
+    statusCode: number;
+    body?: any;
+}
+
+export type UserState = {
+    id: string;
+    email: string;
+    name: string;
+    token: string;
+}
+
+export type UserCookie = {
+    bearer: string;
+}
+
+export type UpdatePasswordRequest = {
+    token: string;
+    email: string;
+    password: string;
+}
+
+export type PasswordResetRequest = {
+    email: string;
+    origin: string;
+    path: string;
+}
+
+export const TokenType = {
+    EMAIL_VERIFICATION: 'email_verification',
+    PASSWORD_RESET: 'password_reset',
+    BEARER: 'bearer'
 }

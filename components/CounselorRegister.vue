@@ -10,7 +10,7 @@
                <i class="ri-user-3-line login__icon"></i>
 
                <div class="login__box-input">
-                  <input type="text" required class="login__input" id="login-email" placeholder=" " v-model="details.name">
+                  <input type="text" required class="login__input" id="name" placeholder=" " v-model="details.name">
                   <label for="login-email" class="login__label">Name</label>
                </div>
             </div>
@@ -79,9 +79,12 @@ async function signup() {
 
    details.password = password2.value
 
-   const response = await useFetch('api/user/register')
+   const response = await useFetch('/api/auth/register', {
+     method: 'POST',
+     body: details
+   })
    .then(
-      (res) => res.data
+      (res) => res.data.value ?? null
    ).catch(
       (err) => {
          alert("An error occurred")
@@ -92,7 +95,7 @@ async function signup() {
 
    if (!response) return alert("Fatal: Fetch Failed")
 
-   console.log(response.value)
+   console.log(response)
 }
 
 
