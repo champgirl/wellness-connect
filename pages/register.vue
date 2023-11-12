@@ -1,11 +1,11 @@
 <template>
    <Title>Login</Title>
    <div>
-      <component :is="who === user.COUNSELOR ? counselorRegister : studentRegister"></component>
+      <component :is="who === userEnum.COUNSELOR ? counselorRegister : studentRegister"></component>
    </div>
 </template>
 <script setup lang="ts">
-import { user } from '@/types';
+import { userEnum } from '@/types';
 const counselorRegister = resolveComponent('CounselorRegister')
 const studentRegister = resolveComponent('StudentRegister')
 

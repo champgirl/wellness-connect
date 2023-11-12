@@ -9,3 +9,6 @@ export const counselor = mysqlTable('counselor', {
     contact: varchar('contact', {length: 15}),
     cratedAt: datetime('created_at').default(sql`CURRENT_TIMESTAMP`).notNull()
 })
+
+
+export type Counselor = typeof counselor.$inferSelect

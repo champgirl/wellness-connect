@@ -36,8 +36,8 @@
                             </a>
 
                             <div class="navbar-dropdown">
-                                <NuxtLink class="navbar-item" :to="`/register?user=${user.STUDENT}`">Student</NuxtLink>
-                                <NuxtLink class="navbar-item" :to="`/register?user=${user.COUNSELOR}`">Counselor</NuxtLink>
+                                <NuxtLink class="navbar-item" :to="`/register?user=${userEnum.STUDENT}`">Student</NuxtLink>
+                                <NuxtLink class="navbar-item" :to="`/register?user=${userEnum.COUNSELOR}`">Counselor</NuxtLink>
                             </div>
                         </div>
                         <NuxtLink class="button is-light" to="login">
@@ -54,7 +54,7 @@
     </footer>
 </template>
 <script setup lang="ts">
-import { user } from '~/types'
+import { userEnum } from '~/types'
 </script>
 <style lang="scss">
 @import url('https://fonts.googleapis.com/css2?family=Rubik:wght@300;400;800&display=swap');

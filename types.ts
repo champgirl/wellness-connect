@@ -1,6 +1,6 @@
 import type {ChatCompletionMessageParam} from "openai/src/resources/chat/completions";
 
-export enum user {
+export enum userEnum {
     COUNSELOR = 'counselor',
     STUDENT = 'student'
 }
@@ -72,6 +72,7 @@ export type UpdatePasswordRequest = {
     token: string;
     email: string;
     password: string;
+    who: userEnum;
 }
 
 export type PasswordResetRequest = {
