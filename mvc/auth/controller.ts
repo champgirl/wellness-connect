@@ -1,14 +1,26 @@
 import {defineEventHandler, createRouter} from "h3";
-import type {HttpResponse} from "~/types";
+import {register, login, requestReset, updatePassword, logout} from "~/mvc/auth/functions";
 
 const router = createRouter()
 
 router.post('/register', defineEventHandler(async event => {
-    console.log(await readBody(event))
-    return {
-        statusCode: 200,
-        body: "Register Success"
-    } as HttpResponse
+    return register(event)
+}))
+
+router.post('/login', defineEventHandler(async event => {
+    return login(event)
+}))
+
+router.post('/reset', defineEventHandler(async event => {
+    return requestReset(event)
+}))
+
+router.post('/update', defineEventHandler(async event => {
+    return updatePassword(event)
+}))
+
+router.post('/logout', defineEventHandler(async event => {
+    return logout(event)
 }))
 
 export default useBase('/api/auth', router.handler)

@@ -1,22 +1,94 @@
 {
   "version": "5",
   "dialect": "mysql",
-  "id": "d2e981ef-ad20-4e85-b3f0-424cea991f41",
+  "id": "325df272-6157-4629-aa95-d4e2e9ced5f3",
   "prevId": "00000000-0000-0000-0000-000000000000",
   "tables": {
-    "users": {
-      "name": "users",
+    "appointment": {
+      "name": "appointment",
       "columns": {
-        "user_id": {
-          "name": "user_id",
-          "type": "varchar(32)",
+        "id": {
+          "name": "id",
+          "type": "int",
           "primaryKey": false,
           "notNull": true,
+          "autoincrement": true
+        },
+        "student_id": {
+          "name": "student_id",
+          "type": "int",
+          "primaryKey": false,
+          "notNull": false,
           "autoincrement": false
+        },
+        "counselor_id": {
+          "name": "counselor_id",
+          "type": "int",
+          "primaryKey": false,
+          "notNull": false,
+          "autoincrement": false
+        },
+        "created_at": {
+          "name": "created_at",
+          "type": "datetime",
+          "primaryKey": false,
+          "notNull": true,
+          "autoincrement": false,
+          "default": "CURRENT_TIMESTAMP"
+        }
+      },
+      "indexes": {},
+      "foreignKeys": {
+        "appointment_student_id_student_id_fk": {
+          "name": "appointment_student_id_student_id_fk",
+          "tableFrom": "appointment",
+          "tableTo": "student",
+          "columnsFrom": [
+            "student_id"
+          ],
+          "columnsTo": [
+            "id"
+          ],
+          "onDelete": "no action",
+          "onUpdate": "no action"
+        },
+        "appointment_counselor_id_counselor_id_fk": {
+          "name": "appointment_counselor_id_counselor_id_fk",
+          "tableFrom": "appointment",
+          "tableTo": "counselor",
+          "columnsFrom": [
+            "counselor_id"
+          ],
+          "columnsTo": [
+            "id"
+          ],
+          "onDelete": "no action",
+          "onUpdate": "no action"
+        }
+      },
+      "compositePrimaryKeys": {
+        "appointment_id": {
+          "name": "appointment_id",
+          "columns": [
+            "id"
+          ]
+        }
+      },
+      "uniqueConstraints": {}
+    },
+    "counselor": {
+      "name": "counselor",
+      "columns": {
+        "id": {
+          "name": "id",
+          "type": "int",
+          "primaryKey": false,
+          "notNull": true,
+          "autoincrement": true
         },
         "name": {
           "name": "name",
-          "type": "varchar(20)",
+          "type": "varchar(30)",
           "primaryKey": false,
           "notNull": false,
           "autoincrement": false,
@@ -36,8 +108,141 @@
           "notNull": false,
           "autoincrement": false
         },
-        "is_ephemeral": {
-          "name": "is_ephemeral",
+        "contact": {
+          "name": "contact",
+          "type": "varchar(15)",
+          "primaryKey": false,
+          "notNull": false,
+          "autoincrement": false
+        },
+        "created_at": {
+          "name": "created_at",
+          "type": "datetime",
+          "primaryKey": false,
+          "notNull": true,
+          "autoincrement": false,
+          "default": "CURRENT_TIMESTAMP"
+        }
+      },
+      "indexes": {},
+      "foreignKeys": {},
+      "compositePrimaryKeys": {
+        "counselor_id": {
+          "name": "counselor_id",
+          "columns": [
+            "id"
+          ]
+        }
+      },
+      "uniqueConstraints": {}
+    },
+    "student": {
+      "name": "student",
+      "columns": {
+        "id": {
+          "name": "id",
+          "type": "int",
+          "primaryKey": false,
+          "notNull": true,
+          "autoincrement": true
+        },
+        "name": {
+          "name": "name",
+          "type": "varchar(30)",
+          "primaryKey": false,
+          "notNull": false,
+          "autoincrement": false,
+          "default": "'Anonymous'"
+        },
+        "psuedonym": {
+          "name": "psuedonym",
+          "type": "varchar(30)",
+          "primaryKey": false,
+          "notNull": false,
+          "autoincrement": false
+        },
+        "password": {
+          "name": "password",
+          "type": "varchar(256)",
+          "primaryKey": false,
+          "notNull": false,
+          "autoincrement": false
+        },
+        "email": {
+          "name": "email",
+          "type": "varchar(1024)",
+          "primaryKey": false,
+          "notNull": false,
+          "autoincrement": false
+        },
+        "contact": {
+          "name": "contact",
+          "type": "varchar(1024)",
+          "primaryKey": false,
+          "notNull": false,
+          "autoincrement": false
+        },
+        "chats": {
+          "name": "chats",
+          "type": "json",
+          "primaryKey": false,
+          "notNull": false,
+          "autoincrement": false
+        },
+        "reg_no": {
+          "name": "reg_no",
+          "type": "varchar(20)",
+          "primaryKey": false,
+          "notNull": false,
+          "autoincrement": false
+        },
+        "created_at": {
+          "name": "created_at",
+          "type": "datetime",
+          "primaryKey": false,
+          "notNull": true,
+          "autoincrement": false,
+          "default": "CURRENT_TIMESTAMP"
+        }
+      },
+      "indexes": {},
+      "foreignKeys": {},
+      "compositePrimaryKeys": {
+        "student_id": {
+          "name": "student_id",
+          "columns": [
+            "id"
+          ]
+        }
+      },
+      "uniqueConstraints": {
+        "student_psuedonym_unique": {
+          "name": "student_psuedonym_unique",
+          "columns": [
+            "psuedonym"
+          ]
+        }
+      }
+    },
+    "tokens": {
+      "name": "tokens",
+      "columns": {
+        "id": {
+          "name": "id",
+          "type": "int",
+          "primaryKey": false,
+          "notNull": true,
+          "autoincrement": true
+        },
+        "token": {
+          "name": "token",
+          "type": "varchar(36)",
+          "primaryKey": false,
+          "notNull": true,
+          "autoincrement": false
+        },
+        "is_valid": {
+          "name": "is_valid",
           "type": "boolean",
           "primaryKey": false,
           "notNull": false,
@@ -52,22 +257,43 @@
           "autoincrement": false,
           "default": "CURRENT_TIMESTAMP"
         },
-        "is_admin": {
-          "name": "is_admin",
-          "type": "boolean",
+        "updated_at": {
+          "name": "updated_at",
+          "type": "datetime",
+          "primaryKey": false,
+          "notNull": true,
+          "autoincrement": false,
+          "default": "CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP"
+        },
+        "user_id": {
+          "name": "user_id",
+          "type": "int",
+          "primaryKey": false,
+          "notNull": true,
+          "autoincrement": false
+        },
+        "who": {
+          "name": "who",
+          "type": "enum('counselor','student')",
           "primaryKey": false,
           "notNull": false,
-          "autoincrement": false,
-          "default": false
+          "autoincrement": false
+        },
+        "type": {
+          "name": "type",
+          "type": "enum('email_verification','password_reset','bearer')",
+          "primaryKey": false,
+          "notNull": true,
+          "autoincrement": false
         }
       },
       "indexes": {},
       "foreignKeys": {},
       "compositePrimaryKeys": {
-        "users_user_id": {
-          "name": "users_user_id",
+        "tokens_id": {
+          "name": "tokens_id",
           "columns": [
-            "user_id"
+            "id"
           ]
         }
       },

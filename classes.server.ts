@@ -55,6 +55,14 @@ export class GPTChatQueueItem {
             const completion = await openai.chat.completions.create({
                 ...this._gptChat,
                 stream: true
+            }).catch(err => {
+                console.error(err)
+                this._stream.write(JSON.stringify({
+                    statusCode: 500,
+                    body: err
+                }))
+
+                return []
             })
 
             for await (const chunk of completion) {

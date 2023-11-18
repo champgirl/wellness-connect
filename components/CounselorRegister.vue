@@ -1,5 +1,5 @@
 <template>
-   <div class="login">
+   <div class="login register">
       <img src="/images/login-bg-4.svg" alt="login image" class="login__img">
 
       <form class="login__form" @submit.prevent="signup">
@@ -50,7 +50,7 @@
 
                <div class="login__box-input">
                   <input type="password" required class="login__input" id="login-pass2" placeholder=" " v-model="password2">
-                  <label for="login-pass2" class="login__label">Password</label>
+                  <label for="login-pass2" class="login__label">Confirm Password</label>
                   <i class="ri-eye-off-line login__eye" id="login-eye"></i>
                </div>
             </div>

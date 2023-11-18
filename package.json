@@ -10,7 +10,7 @@
     "postinstall": "nuxt prepare",
     "drizzle:generate": "drizzle-kit generate:mysql",
     "drizzle:push": "drizzle-kit push:mysql",
-    "migrate": "yarn drizzle:generate && yarn drizzle:push"
+    "migrate": "npm run drizzle:generate && npm run drizzle:push"
   },
   "devDependencies": {
     "@nuxt/devtools": "latest",

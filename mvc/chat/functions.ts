@@ -6,7 +6,7 @@ import * as fs from 'fs';
 import path from 'path';
 
 export async function completeGPT(event: H3Event) {
-    const {text} = await readBody(event)
+    const {messages} = await readBody(event)
     const instructionsLocation = path.join(process.cwd(), 'instructions.txt')
     const instructions = fs.readFileSync(instructionsLocation, 'utf8')
 
@@ -18,12 +18,9 @@ export async function completeGPT(event: H3Event) {
         }]
     }
 
-    const prompt = {
-        role: 'user',
-        content: text ?? ''
-    } as ChatCompletionMessageParam
+    gptChat.messages = gptChat.messages.concat(messages)
 
-    gptChat.messages.push(prompt)
+    console.log(gptChat)
 
     addRequestToGlobalProcessingQueue(event, gptChat)
 }

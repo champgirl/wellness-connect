@@ -1,12 +1,12 @@
-import {mysqlTable, varchar, datetime, json} from "drizzle-orm/mysql-core";
+import {mysqlTable, varchar, datetime, json, int} from "drizzle-orm/mysql-core";
 import { sql } from "drizzle-orm";
 import {relations} from "drizzle-orm";
-import {appointment} from "~/db/schema/appointment";
+import {appointment} from "./appointment";
 
 export const student = mysqlTable('student', {
-    id: varchar('id', {length: 36}).notNull().default(sql`AUTO_INCREMENT`).primaryKey(),
+    id: int('id').notNull().primaryKey().autoincrement(),
     name: varchar('name', {length: 30}).default("Anonymous"),
-    psuedonym: varchar('psuedonym', {length: 30}),
+    psuedonym: varchar('psuedonym', {length: 30}).unique(),
     password: varchar('password', {length: 256}),
     email: varchar('email', {length: 1024}),
     contact: varchar('contact', {length: 1024}),

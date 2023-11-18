@@ -2,21 +2,34 @@
   <Title>Home</Title>
   <div class="landing-page">
     <div class="background-image">
-      <img src="/images/home-bg.webp" alt="home image">
+      <img src="/images/landing-bg.jpg" alt="home image">
     </div>
     <div class="content">
       <h1 class="title">Wellness Connect</h1>
       <h2 class="subtitle">Your Path to Mental Well-being</h2>
       <p class="description">
-        Discover a community dedicated to mental health awareness and support. Engage with the latest news and events,
+         Engage with the latest news and events,
         connect with our interactive chatbot, and schedule confidential appointments with experienced university
-        counselors. Join us in fostering a culture of well-being and understanding. Your wellness journey begins here.
+        counselors.
       </p>
+      <div class="dropdown is-hoverable">
+        <a class="button dropdown-trigger is-primary">
+          Get Started
+        </a>
+
+        <div class="dropdown-menu has-background-link-light">
+          <NuxtLink class="navbar-item" :to="`/register?user=${userEnum.STUDENT}`"> I'm a Student</NuxtLink>
+          <NuxtLink class="navbar-item" :to="`/register?user=${userEnum.COUNSELOR}`">I'm a Counselor</NuxtLink>
+        </div>
+      </div>
     </div>
   </div>
 </template>
 <script setup lang="ts">
 
+
+
+import {userEnum} from "~/types";
 </script>
 
 <style scoped>
@@ -31,21 +44,21 @@
 }
 
 .background-image img {
-  width: 100%;
-  height: 100%;
+  width: 100vw;
+  height: 100vh;
   object-fit: cover;
-  scale: 1.15;
-  position: absolute;
+  position: relative;
   top: 0;
-  left: 25%;
+  z-index: -1;
+
   z-index: -1;
 }
 
 .content {
   z-index: 1;
   color: #fff;
-  background-color: rgba(255, 255, 255, 0.58);
-  backdrop-filter: blur(50px);
+  background-color: rgba(255, 255, 255, );
+  backdrop-filter: blur(60px);
   max-width: 500px;
   margin-top: -50px;
   padding: 1rem;
@@ -67,7 +80,7 @@
 .subtitle {
   font-size: 1.5rem;
   font-weight: 500;
-  margin-bottom: 0.5em;
+  margin-bottom: 0.7em;
   font-family: 'Rubik', sans-serif;
 }
 

@@ -1,82 +1,43 @@
 import type {
+    CounselorLoginCredentials, CounselorRegister,
     LoginCredentials,
     PasswordResetRequest,
-    RegisterCredentials,
+    RegisterCredentials, StudentLoginCredentials, StudentRegister,
     UpdatePasswordRequest,
     UserState
 } from "~/types";
 import {TokenType, userEnum} from '~/types';
 import db from "~/db/db";
-import {hashPassword, verifyPassword} from "~/mvc/auth/helpers";
+import {hashData, setAuthCookie, checkHash} from "~/mvc/auth/helpers";
 import {v4 as uuidv4} from "uuid";
 import {tokens} from "~/db/schema/tokens";
 import {and, eq} from "drizzle-orm";
 import {mailResetPasswordLink} from "~/mvc/utils";
 import {counselor} from "~/db/schema/counselor";
 import {student} from "~/db/schema/student";
-import type {Config as namesConfig} from 'unique-names-generator';
-import {names, uniqueNamesGenerator} from 'unique-names-generator';
-import {undefined} from "zod";
+import {names, uniqueNamesGenerator, type Config as namesConfig} from 'unique-names-generator';
 
 const configNames: namesConfig = {
     dictionaries: [names]
 }
 
 
-export async function loginUser(data: LoginCredentials, bearer: string | null = null, who: userEnum): Promise<UserState | null> {
-    let db_user
+export async function loginStudent(data: StudentLoginCredentials, bearer: string | null = null): Promise<UserState | null> {
     let newToken
 
-    if (who === userEnum.COUNSELOR) {
-        const result = await db.select({
-            id: counselor.id,
-            name: counselor.name,
-            email: counselor.email,
-            password: counselor.password
-        }).from(counselor).where(eq(counselor.email, data.email))
-            .catch((e) => {
-                throw e as Error
-            })
+    const db_user = await getUserByPseudonym(data.pseudonym)
 
-        if (result.length < 1) return null
+    if (!db_user) throw new Error("User does not exist")
 
-        db_user = result[0]
+    if (!checkHash(data.password, db_user.password)) throw new Error("Passwords do not match")
 
-        if (!verifyPassword(data.password, db_user.password)) return null
+    if (bearer) revokeToken(bearer, TokenType.BEARER, db_user.who!)
 
-        if (bearer) revokeToken(bearer, TokenType.BEARER, who)
+    newToken = await generateNewToken(db_user.id, TokenType.BEARER, db_user.who!)
+        .catch((e) => {
+            throw e as Error
+        })
 
-        newToken = await generateNewToken(db_user.id, TokenType.BEARER)
-            .catch((e) => {
-                throw e as Error
-            })
-    } else if (who === userEnum.STUDENT) {
-        const result = await db.select({
-            id: student.id,
-            name: student.name,
-            email: student.email,
-            password: student.password
-        }).from(student).where(eq(student.email, data.email))
-            .catch((e) => {
-                throw e as Error
-            })
-
-        if (result.length < 1) return null
-
-        db_user = result[0]
-        if (!verifyPassword(data.password, db_user.password)) return null
-
-        if (bearer) revokeToken(bearer, TokenType.BEARER, who)
-
-        newToken = await generateNewToken(db_user.id, TokenType.BEARER)
-            .catch((e) => {
-                throw e as Error
-            })
-    } else {
-        throw new Error("No such user type")
-    }
-
-    if (!db_user) return null
     if (!newToken) throw new Error("Unable to generate token")
 
     let userState = {} as UserState
@@ -89,13 +50,44 @@ export async function loginUser(data: LoginCredentials, bearer: string | null = 
     return userState
 }
 
-async function generateNewToken(user_id: string, type: string): Promise<string> {
+export async function loginCounselor(data: CounselorLoginCredentials, bearer: string | null = null): Promise<UserState | null> {
+    let newToken
+
+    const db_user = await getCounselorByEmail(data.email)
+
+    if (!db_user) throw new Error("User does not exist")
+
+    if (!checkHash(data.password, db_user.password)) throw new Error("Passwords do not match")
+
+    if (bearer) revokeToken(bearer, TokenType.BEARER, db_user.who!)
+
+    newToken = await generateNewToken(db_user.id, TokenType.BEARER, db_user.who!)
+        .catch((e) => {
+            throw e as Error
+        })
+
+    if (!db_user) return null
+    if (!newToken) throw new Error("Unable to generate token")
+
+    let userState = {} as UserState
+
+    userState.id = db_user.id
+    userState.name = db_user.name!
+    userState.email = db_user.email!
+    userState.token = newToken
+
+
+    return userState
+}
+
+async function generateNewToken(user_id: number, type: string, who: userEnum): Promise<string> {
     const token = uuidv4()
 
     await db.insert(tokens).values({
         token: token,
         user_id: user_id,
-        type: type
+        type: type,
+        who: who
     }).catch((e) => {
         throw e
     })
@@ -103,74 +95,57 @@ async function generateNewToken(user_id: string, type: string): Promise<string> 
     return token
 }
 
-export async function registerUser(data: RegisterCredentials): Promise<UserState | null> {
-    let _user = await getUserByEmail(data.email)
-
-    if (_user) throw new Error("User already exists")
-
-    if (data.hasOwnProperty("reg_no")) {
-        data.password = hashPassword(data.password)
-
-        await db.insert(student)
-            .values({
-                ...data,
-                psuedonym: uniqueNamesGenerator(configNames)
-            })
-
-        return await loginUser({
-            email: data.email,
-            password: data.password
-        }, null, userEnum.STUDENT)
-
+export function loginUser(data: LoginCredentials, bearer: string | null){
+    if (data.hasOwnProperty("pseudonym")) {
+        return loginStudent(data as StudentLoginCredentials, bearer)
+    } else if (data.hasOwnProperty("email")){
+        return loginCounselor(data as CounselorLoginCredentials, bearer)
     } else {
-        data.password = hashPassword(data.password)
-
-        await db.insert(counselor)
-            .values(data)
-
-        return await loginUser({
-            email: data.email,
-            password: data.password
-        }, null, userEnum.COUNSELOR)
+        return null
     }
 }
 
-async function getUserByUserId(id: string | number, who: userEnum): Promise<UserState | null> {
-    if (typeof id === "string") id = parseInt(id)
-    let result;
-
-    if (who === userEnum.COUNSELOR) {
-        result = await db.select({
-            id: counselor.id,
-            name: counselor.name,
-            email: counselor.email
-        }).from(counselor).where(eq(counselor.id, id))
-            .catch((e) => {
-                throw e
-            })
-    } else if (who === userEnum.STUDENT) {
-        result = await db.select({
-            id: student.id,
-            name: student.name,
-            email: student.email
-        }).from(student).where(eq(student.id, id))
-            .catch((e) => {
-                throw e
-            })
+export function registerUser(data: RegisterCredentials){
+    if(data.hasOwnProperty('reg_no')){
+        return registerStudent(data)
+    } else {
+        return registerCounselor(data)
     }
+}
 
+export async function registerCounselor(data: CounselorRegister): Promise<UserState | null> {
+    let _user = await getCounselorByEmail(data.email)
 
-    if (!result || result.length < 1) return null
+    if (_user) throw new Error("User already exists")
 
-    const user = result[0]
+    data.password = hashData(data.password)
 
-    let userState = {} as UserState
+    if (data.hasOwnProperty("reg_no")) {
+        const name = uniqueNamesGenerator(configNames)
+        await db.insert(student)
+            .values({
+                ...data,
+                psuedonym: name
+            })
 
-    userState.id = user.id
-    userState.name = user.name!
-    userState.email = user.email!
+        return await loginStudent({
+            pseudonym: name,
+            password: data.password
+        })
 
-    return userState
+    } else {
+        await db.insert(counselor)
+            .values(data)
+
+        return await loginCounselor({
+            email: data.email,
+            password: data.password
+        })
+    }
+}
+
+async function registerStudent(data: StudentRegister){
+
 }
 
 async function getUserFromToken(token: string, type: string, userType: userEnum): Promise<UserState | null> {
@@ -204,11 +179,38 @@ async function getUserFromToken(token: string, type: string, userType: userEnum)
     return userState
 }
 
+
+export async function getUserByPseudonym(name: string) {
+    let userState = {} as UserState & { password: string }
+
+    const result = await db.select({
+        id: student.id,
+        name: student.name,
+        email: student.email,
+        password: student.password
+    }).from(student).where(eq(student.psuedonym, name))
+        .limit(1)
+        .catch((e) => {
+            throw e as Error
+        })
+
+    if (!result || result.length == 0) return null
+
+    userState.id = result[0].id
+    userState.name = result[0].name!
+    userState.email = result[0].email!
+
+    return userState
+}
+
 export async function identifyUser(bearer: string, who: userEnum): Promise<UserState | null> {
     if (Array.isArray(bearer)) throw new Error("Invalid headers | More than one bearer token")
     return await getUserFromToken(bearer, TokenType.BEARER, who)
 }
 
+async function getStudentByEmail(email: string){
+
+}
 
 export async function logoutUser(bearer: string | null): Promise<boolean> {
     if (Array.isArray(bearer)) return false
@@ -224,10 +226,15 @@ export async function logoutUser(bearer: string | null): Promise<boolean> {
     return true
 }
 
-async function resetUserTokens(id: string, type: string, who: userEnum): Promise<boolean> {
+async function resetUserTokens(id: string | number, type: string, who: userEnum): Promise<boolean> {
+    if (typeof id === 'string') id = parseInt(id)
     await db.update(tokens).set({
         isValid: false
-    }).where(and(eq(tokens.id, id), eq(tokens.type, type)), eq(tokens.who, who))
+    }).where(and(eq
+            (tokens.id, id),
+            eq(tokens.type, type)),
+        // @ts-ignore
+        eq(tokens.who, who))
         .catch((e) => {
             throw e
         })
@@ -235,35 +242,24 @@ async function resetUserTokens(id: string, type: string, who: userEnum): Promise
     return true
 }
 
-export async function getUserByEmail(email: string): Promise<UserState | null> {
+export async function getCounselorByEmail(email: string): Promise<UserState & { password: string } | null> {
     let result = await db.select({
         id: counselor.id,
         name: counselor.name,
-        email: counselor.email
+        email: counselor.email,
+        password: counselor.password
     }).from(counselor).where(eq(counselor.email, email))
         .limit(1)
         .catch((e) => {
             throw e as Error
         })
 
-    if (!result || result.length == 0) {
-        await db.select({
-            id: counselor.id,
-            name: counselor.name,
-            email: counselor.email
-        }).from(counselor).where(eq(counselor.email, email))
-            .limit(1)
-            .catch((e) => {
-                throw e as Error
-            })
-    }
-
-    if (!result || result.length == 0) return null
-
-    let userState = {} as UserState
+    let userState = {} as UserState & { who: string, password: string }
     userState.id = result[0].id
     userState.name = result[0].name!
     userState.email = result[0].email!
+    userState.password = result[0].password!
+    userState.who = userEnum.COUNSELOR
 
     return userState
 }
@@ -296,7 +292,7 @@ async function revokeToken(token: string, type: string, who: userEnum) {
     await db.update(tokens).set({
         isValid: false,
         type: type
-    }).where(eq(tokens.token, token), eq(tokens.who, who))
+    }).where(and(eq(tokens.token, token), eq(tokens.who, who)))
         .catch((e) => {
             throw e
         })
@@ -312,23 +308,13 @@ export async function updateUserPassword(data: UpdatePasswordRequest): Promise<U
 
     let result;
 
-    if (data.who === userEnum.STUDENT) {
-        result = await db.update(student)
-            .set({
-                password: hashPassword(data.password)
-            }).where(eq(student.id, user.id))
-            .catch((e) => {
-                throw e as Error
-            })
-    } else if (data.who === userEnum.COUNSELOR) {
-        result = await db.update(counselor)
-            .set({
-                password: hashPassword(data.password)
-            }).where(eq(counselor.id, user.id))
-            .catch((e) => {
-                throw e as Error
-            })
-    }
+    result = await db.update(counselor)
+        .set({
+            password: hashData(data.password)
+        }).where(eq(counselor.id, user.id))
+        .catch((e) => {
+            throw e as Error
+        })
 
     if (!result) throw new Error("Failed to update user")
 
@@ -337,24 +323,24 @@ export async function updateUserPassword(data: UpdatePasswordRequest): Promise<U
             throw e as Error
         })
 
-    let loginCredentials = {} as LoginCredentials
+    let loginCredentials = {} as CounselorLoginCredentials
     loginCredentials.email = user.email!
     loginCredentials.password = data.password
 
-    return await loginUser(loginCredentials, null, data.who).catch((e) => {
+    return await loginCounselor(loginCredentials, null).catch((e) => {
         throw e as Error
     })
 }
 
 export async function requestPasswordReset(data: PasswordResetRequest): Promise<boolean> {
-    const user = await getUserByEmail(data.email)
+    const user = await getCounselorByEmail(data.email)
         .catch((e) => {
             throw e as Error
         })
 
     if (!user) throw new Error("User not found")
 
-    const token = await generateNewToken(user.id, TokenType.PASSWORD_RESET)
+    const token = await generateNewToken(user.id, TokenType.PASSWORD_RESET, user.who as userEnum)
         .catch((e) => {
             throw new Error("Failed to generate token")
         })

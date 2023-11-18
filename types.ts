@@ -39,10 +39,17 @@ export type StudentRegister = {
     reg_no: string
 }
 
-export type LoginCredentials = {
+export type StudentLoginCredentials = {
+    pseudonym: string,
+    password: string
+}
+
+export type CounselorLoginCredentials = {
     email: string;
     password: string;
 }
+
+export type LoginCredentials = StudentLoginCredentials | CounselorLoginCredentials
 
 
 export type RegisterCredentials = StudentRegister | CounselorRegister
@@ -58,10 +65,12 @@ export type APIResponse = {
 }
 
 export type UserState = {
-    id: string;
+    id: number;
     email: string;
     name: string;
     token: string;
+    who?: userEnum;
+    pseudonym?: string;
 }
 
 export type UserCookie = {

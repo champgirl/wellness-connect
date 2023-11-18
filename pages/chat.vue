@@ -1,5 +1,6 @@
 <template>
   <Title>JPT | Chat</Title>
+  <img src="/images/chat-bg-2.jpg" alt="chat image" class="background-image">
   <div class="container">
     <div class="main-column">
       <div class="completion">
@@ -78,11 +79,17 @@ async function readStream(reader: ReadableStreamDefaultReader, callback: Functio
 
 async function getChatCompletion() {
   loading.value = true;
+
+  prompt.messages.push({
+    role: 'user',
+    content: textInput.value
+  })
+
   await new Promise(async (resolve, reject) => {
     const response = await $fetch('/api/chat/gpt', {
       method: 'POST',
       body: JSON.stringify({
-        text: textInput.value ?? ''
+        messages: prompt.messages
       }),
       responseType: 'stream'
     }).catch(err => {
@@ -96,11 +103,6 @@ async function getChatCompletion() {
     if (streamReader){
       processing.value = true
       loading.value = false
-
-      prompt.messages.push({
-        role: 'user',
-        content: textInput.value
-      })
 
       textInput.value = ''
       completion.value = ''
@@ -118,7 +120,8 @@ async function getChatCompletion() {
           if (response.statusCode === 201) {
             completion.value += response.body
           } else if (response.statusCode === 500) {
-            alert('Error fetching summaries')
+            alert('Error from server')
+            console.error(response.body)
             reject(response.body)
           }
         }
@@ -154,6 +157,14 @@ onMounted(() => {
 })
 </script>
 <style scoped lang="scss">
+.background-image {
+  width: 100vw;
+  height: 100vh;
+  object-fit: cover;
+  position: absolute;
+  top: 0;
+  z-index: -1;
+}
 .main-column {
   margin: 0 auto;
   height: 85vh;

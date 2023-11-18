@@ -1,12 +1,12 @@
-import {datetime, json, mysqlTable, varchar} from "drizzle-orm/mysql-core/index";
+import {datetime, int, mysqlTable, varchar} from "drizzle-orm/mysql-core";
 import {sql} from "drizzle-orm";
-import {student} from "~/db/schema/student";
-import {counselor} from "~/db/schema/counselor";
+import {student} from "./student";
+import {counselor} from "./counselor";
 
 export const appointment = mysqlTable('appointment', {
-    id: varchar('id', {length: 36}).notNull().primaryKey(),
-    student_id: varchar('student_id', {length: 36}).references(() => student.id),
-    counselor_id: varchar('counselor_id', {length: 36}).references(() => counselor.id),
+    id: int('id').notNull().primaryKey().autoincrement(),
+    student_id: int('student_id').references(() => student.id),
+    counselor_id: int('counselor_id').references(() => counselor.id),
     cratedAt: datetime('created_at').default(sql`CURRENT_TIMESTAMP`).notNull()
 })
 
