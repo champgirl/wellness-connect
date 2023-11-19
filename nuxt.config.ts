@@ -2,6 +2,7 @@
 export default defineNuxtConfig({
   devtools: { enabled: false },
   css: [
-    '~/assets/bulma/bulma.min.css'
+    '~/assets/bulma/bulma.min.css',
+    '~/assets/highlight.css'
   ]
 })

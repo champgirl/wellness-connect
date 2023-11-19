@@ -1,84 +1,107 @@
 <template>
-  <nav class="navbar" role="navigation" aria-label="main navigation">
-    <div class="navbar-brand ml-4">
-      <a role="button" class="navbar-burger" aria-label="menu" aria-expanded="false" data-target="navbarBasicExample">
-        <span aria-hidden="true"></span>
-        <span aria-hidden="true"></span>
-        <span aria-hidden="true"></span>
-      </a>
-    </div>
-
-    <div id="navbarBasicExample" class="navbar-menu">
-      <div class="navbar-start">
-        <NuxtLink class="navbar-item" to="/">
-          Home
-        </NuxtLink>
-        <NuxtLink class="navbar-item" to="/">
-          News & Events
-        </NuxtLink>
-        <NuxtLink class="navbar-item" to="/Appointments">
-          Appointments
-        </NuxtLink>
+  <div id="wrapper">
+    <nav class="navbar" role="navigation" aria-label="main navigation">
+      <div class="navbar-brand ml-4">
+        <a role="button" class="navbar-burger" aria-label="menu" aria-expanded="false" data-target="navbarBasicExample">
+          <span aria-hidden="true"></span>
+          <span aria-hidden="true"></span>
+          <span aria-hidden="true"></span>
+        </a>
       </div>
 
-      <div class="navbar-end">
-        <div class="navbar-item">
-          <div class="buttons">
-            <NuxtLink class="navbar-item" to="/chat">
-              <div class="svg-chat-container">
-                <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24">
-                  <path
-                      d="M10 3H14C18.4183 3 22 6.58172 22 11C22 15.4183 18.4183 19 14 19V22.5C9 20.5 2 17.5 2 11C2 6.58172 5.58172 3 10 3ZM12 17H14C17.3137 17 20 14.3137 20 11C20 7.68629 17.3137 5 14 5H10C6.68629 5 4 7.68629 4 11C4 14.61 6.46208 16.9656 12 19.4798V17Z">
-                  </path>
-                </svg>
-              </div>
-            </NuxtLink>
-            <div v-if="useUser().value">
+      <div id="navbarBasicExample" class="navbar-menu">
+        <div class="navbar-start">
+          <NuxtLink class="navbar-item" to="/">
+            Home
+          </NuxtLink>
+          <NuxtLink class="navbar-item" to="/">
+            News & Events
+          </NuxtLink>
+          <NuxtLink class="navbar-item" to="/Appointments">
+            Appointments
+          </NuxtLink>
+        </div>
+
+        <div class="navbar-end">
+          <div class="navbar-item">
+            <div class="buttons">
+              <NuxtLink class="navbar-item" to="/chat">
+                <div class="svg-chat-container">
+                  <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24">
+                    <path
+                        d="M10 3H14C18.4183 3 22 6.58172 22 11C22 15.4183 18.4183 19 14 19V22.5C9 20.5 2 17.5 2 11C2 6.58172 5.58172 3 10 3ZM12 17H14C17.3137 17 20 14.3137 20 11C20 7.68629 17.3137 5 14 5H10C6.68629 5 4 7.68629 4 11C4 14.61 6.46208 16.9656 12 19.4798V17Z">
+                    </path>
+                  </svg>
+                </div>
+              </NuxtLink>
+              <div v-if="useUser().value">
               <span class="button is-dark" @click="logout">
                 Log Out
               </span>
-            </div>
-            <div class="is-flex" v-else>
-              <div class="navbar-item has-dropdown is-hoverable">
-                <a class="button is-primary">
-                  Sign Up
-                </a>
+              </div>
+              <div class="is-flex" v-else>
+                <div class="navbar-item has-dropdown is-hoverable">
+                  <a class="button is-primary">
+                    Sign Up
+                  </a>
 
-                <div class="navbar-dropdown">
-                  <NuxtLink class="navbar-item" :to="`/register?user=${userEnum.STUDENT}`">Student</NuxtLink>
-                  <NuxtLink class="navbar-item" :to="`/register?user=${userEnum.COUNSELOR}`">Counselor</NuxtLink>
+                  <div class="navbar-dropdown">
+                    <NuxtLink class="navbar-item" :to="`/register?user=${userEnum.STUDENT}`">Student</NuxtLink>
+                    <NuxtLink class="navbar-item" :to="`/register?user=${userEnum.COUNSELOR}`">Counselor</NuxtLink>
+                  </div>
+                </div>
+                <div class="navbar-item has-dropdown is-hoverable">
+                  <a class="button is-light">
+                    Log In
+                  </a>
+
+                  <div class="navbar-dropdown">
+                    <NuxtLink class="navbar-item" :to="`/login?user=${userEnum.STUDENT}`">Student</NuxtLink>
+                    <NuxtLink class="navbar-item" :to="`/login?user=${userEnum.COUNSELOR}`">Counselor</NuxtLink>
+                  </div>
                 </div>
               </div>
-              <NuxtLink class="button is-light" to="login">
-                Log in
-              </NuxtLink>
             </div>
           </div>
         </div>
       </div>
-    </div>
-  </nav>
-  <slot/>
-  <footer class="footer">
-    <div class="footcontent">
-      <p>&#169; 2023 Wellness Connect Ltd. All Rights Reserved</p>
-      <router-link to="/privacypolicy">Privacy Policy</router-link>
-    </div>
-  </footer>
+    </nav>
+    <slot/>
+    <footer class="footer">
+      <div class="footcontent">
+        <p>&#169; 2023 Wellness Connect Ltd. All Rights Reserved</p>
+        <router-link to="/privacypolicy">Privacy Policy</router-link>
+      </div>
+    </footer>
+  </div>
 </template>
 <script setup lang="ts">
 import {userEnum} from '~/types'
 import {useUser} from "~/composables/state";
+import {removeAuthCookie} from "~/helpers.client";
 
 async function logout() {
-  const response = await useFetch('/api/auth/logout').catch(
-      e => {
-        alert(e.message)
-        console.error(e)
-      })
+  const response = await useFetch('/api/auth/logout', {
+    method: 'GET',
+    headers: {
+      'bearer': useUser().value?.token ?? ''
+    }
+  }).then(
+      (res) => {
+        return res.data.value ?? null
+      }
+  ).catch(e => {
+    alert(e.message)
+    console.error(e)
+  })
 
-  console.log(response.data.value)
-  await navigateTo('/login')
+  if (response && response.statusCode === 200) {
+    removeAuthCookie()
+    await navigateTo('/login')
+  } else {
+    alert("An error occurred | Try clearing you cookies")
+    console.log(response)
+  }
 }
 </script>
 <style lang="scss">
@@ -104,6 +127,15 @@ async function logout() {
   box-sizing: border-box;
 }
 
+#wrapper{
+  min-height: 100vh;
+  min-height: 100dvh;
+  color: white;
+  display: grid;
+  grid-template-rows: auto 1fr auto;
+  font-family: "Open Sans", sans-serif;
+}
+
 ul,
 ol {
   list-style: none;
@@ -118,10 +150,52 @@ a {
   }
 }
 
+
 input,
 button {
   border: none;
   outline: none;
+}
+
+
+button{
+  padding: 0.2em 0.7em;
+  position: relative;
+}
+
+.code-container {
+  position: relative;
+  border: 1px solid #ccc;
+  border-radius: 0.25em;
+  margin-bottom: 1rem;
+  margin-top: 1rem;
+  background-color: #f5f5f5;
+  overflow-x: scroll;
+  transition: all 0.2s ease-in-out;
+
+  &:hover {
+    border-color: #aaa;
+  }
+
+  .copy-code-button {
+    position: absolute;
+    top: 0;
+    right: 0;
+    background-color: #fff;
+    border: 1px solid #ccc;
+    border-radius: 0.25rem;
+    cursor: pointer;
+    transition: all 0.2s ease-in-out;
+
+    &:hover {
+      background-color: #ccc;
+    }
+  }
+}
+
+code {
+  font-family: 'Roboto Mono', monospace;
+  font-size: 0.85em;
 }
 
 
@@ -161,12 +235,14 @@ button {
     fill: var(--accent);
   }
 }
-.footer{
+
+.footer {
   background-color: #808080;
   color: #fff;
   padding: 15px;
   text-align: center;
-  .footcontent{
+
+  .footcontent {
     font-size: large;
     font-family: 'Rubik', sans-serif;
   }

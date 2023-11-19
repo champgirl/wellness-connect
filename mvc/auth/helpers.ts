@@ -3,6 +3,7 @@ import {z} from "zod";
 import {H3Event} from "h3";
 import * as crypto from "crypto";
 import type {CounselorLoginCredentials, StudentLoginCredentials} from "~/types";
+import {userEnum} from "~/types";
 
 export function cleanLoginCredentials(data: LoginCredentials | null): LoginCredentials | null {
     if (!data || !data.password) return null
@@ -17,12 +18,10 @@ export function cleanLoginCredentials(data: LoginCredentials | null): LoginCrede
         return null
     }
 
-    data.password = data.password.trim()
-
     const schema = z.object({
         email: z.string().email().optional(),
-        pseudonym: z.string().email().optional(),
-        password: z.string().min(8)
+        pseudonym: z.string().optional(),
+        password: z.string()
     })
 
     try {
@@ -45,7 +44,7 @@ export async function cleanRegisterCredentials(data: RegisterCredentials): Promi
     const schema = z.object({
         email: z.string().email(),
         password: z.string().min(8),
-        bearer: z.string(),
+        bearer: z.string().optional(),
         contact: z.string().optional(),
         name: z.string(),
         reg_no: z.string().optional()
@@ -61,15 +60,16 @@ export async function cleanRegisterCredentials(data: RegisterCredentials): Promi
 }
 
 export function cleanUpdatePasswordRequest(request: UpdatePasswordRequest): UpdatePasswordRequest | null {
-    if (!request || !request.email || !request.token) return null
+    if (!request || !request.empsu || !request.token) return null
 
-    request.email = request.email.trim().toLowerCase()
+    request.empsu = request.empsu.trim().toLowerCase()
     request.token = request.token.trim()
 
     const schema = z.object({
-        email: z.string().email(),
+        empsu: z.string(),
         token: z.string(),
-        password: z.string().min(8)
+        password: z.string().min(8),
+        who: z.enum([userEnum.STUDENT, userEnum.COUNSELOR])
     })
 
     try {
@@ -88,27 +88,10 @@ export function readBearerToken(event: H3Event) {
 }
 
 export function hashData(plaintext: string): string {
-    const salt = crypto.randomBytes(16).toString('hex')
-    const hash = crypto.pbkdf2Sync(plaintext, salt, 1000, 64, 'sha512').toString('hex')
-    return `${salt}:${hash}`
+    return crypto.createHash('sha256').update(plaintext).digest('hex')
 }
 
 export function checkHash(plaintext: string | null, hash: string | null): boolean {
     if (!plaintext || !hash) return false
-    const [salt, key] = hash.split(':')
-    const verify = crypto.pbkdf2Sync(plaintext, salt, 1000, 64, 'sha512').toString('hex')
-    return key === verify
-}
-
-export function setAuthCookie(event: H3Event, data: UserState){
-    // @ts-ignore
-    if(data.password) delete data["password"]
-    // @ts-ignore
-    if(data.id) delete data["id"]
-
-    setCookie(event, 'userState', JSON.stringify(data))
-}
-
-export function removeAuthCookie(event: H3Event){
-    setCookie(event, 'userState', '')
+    return hashData(plaintext) === hash
 }

@@ -4,16 +4,17 @@ import {
     loginUser,
     registerUser,
     logoutUser,
-    updateUserPassword,
-    requestPasswordReset
+    updateCounselorPassword,
+    requestPasswordReset, updateStudentPassword
 } from "~/mvc/auth/queries";
 
 import {
     cleanLoginCredentials,
     cleanUpdatePasswordRequest,
     cleanRegisterCredentials,
-    readBearerToken, setAuthCookie, removeAuthCookie
+    readBearerToken,
 } from "~/mvc/auth/helpers";
+import {userEnum} from "~/types";
 
 
 export async function login(event: H3Event): Promise<APIResponse> {
@@ -29,15 +30,22 @@ export async function login(event: H3Event): Promise<APIResponse> {
     }
     const bearer = readBearerToken(event)
 
-    const result = await loginUser(cleanedLoginData, bearer)
+    const result = await loginUser(cleanedLoginData, bearer)?.catch(e => {
+        return e as Error
+    })
+
     if (!result) {
         response.statusCode = 401
         response.body = "Invalid credentials"
         return response
     }
 
+    if(result instanceof  Error){
+        response.statusCode = 500
+        response.body = result.message
+        return response
+    }
 
-    setAuthCookie(event, result)
 
     response.statusCode = 200
     response.body = result
@@ -91,8 +99,6 @@ export async function logout(event: H3Event): Promise<APIResponse> {
         return response
     }
 
-    removeAuthCookie(event)
-
     response.statusCode = 200
     response.body = "Logged out"
     return response
@@ -109,8 +115,14 @@ export async function updatePassword(event: H3Event): Promise<APIResponse> {
         return response
     }
 
-    const result = await updateUserPassword(data)
-        .catch((e) => e as Error)
+    let result;
+    if(data.who === userEnum.COUNSELOR) {
+        result = await updateCounselorPassword(data)
+            .catch((e) => e as Error)
+    } else {
+        result = await updateStudentPassword(data)
+            .catch((e) => e as Error)
+    }
 
     if (result instanceof Error) {
         response.statusCode = 500

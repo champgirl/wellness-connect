@@ -28,7 +28,7 @@
           <i class="ri-user-3-line login__icon"></i>
 
           <div class="login__box-input">
-            <input type="text" required class="login__input" id="registration" placeholder=" "v-model="details.reg_no">
+            <input type="text" required class="login__input" id="registration" placeholder=" " v-model="details.reg_no">
             <label for="registration" class="login__label">Registration Number</label>
           </div>
         </div>
@@ -62,11 +62,11 @@
             <i class="ri-eye-off-line login__eye" id="login-eye"></i>
           </div>
         </div>
-        <div>
-          <label class="option has-text-white">I have read and agreed to the
+        <div class="terms">
+          <input type="checkbox" checked>
+          <label class="option has-text-white ml-2">I have read and agreed to the
             <RouterLink to="/privacypolicy" class="mr-2"> Privacy Policy</RouterLink>
           </label>
-          <input type="checkbox" checked>
         </div>
       </div>
       <button type="submit" class="login__button">Sign Up</button>
@@ -75,10 +75,13 @@
 </template>
 <style scoped lang="scss">
 input[type="checkbox"] {
+  accent-color: var(--primary-color);
 }
+
 </style>
 <script setup lang="ts">
 import type {StudentRegister} from "@/types";
+import {setAuthCookie} from "~/helpers.client";
 
 const password1 = ref('')
 const password2 = ref('')
@@ -93,6 +96,7 @@ const details = reactive<StudentRegister>({
 
 
 async function signup() {
+  console.log(details)
   if (password1.value !== password2.value) return alert('passwords do not match')
 
   details.password = password2.value
@@ -111,6 +115,12 @@ async function signup() {
   )
 
   if (!response) return alert("Fatal: Fetch Failed")
+
+  if (response.statusCode !== 200) return alert(response.body)
+
+  await setAuthCookie(response.body)
+
+  await navigateTo("/")
 
   console.log(response)
 }

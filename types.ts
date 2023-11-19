@@ -79,7 +79,7 @@ export type UserCookie = {
 
 export type UpdatePasswordRequest = {
     token: string;
-    email: string;
+    empsu: string;
     password: string;
     who: userEnum;
 }

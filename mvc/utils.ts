@@ -1,5 +1,6 @@
 import {PASSWORD_RESET_TEMPLATE} from "~/classes.server";
 import nodemailer from "nodemailer";
+import type {userEnum} from "~/types";
 
 const transporter = nodemailer.createTransport({
     service: 'gmail',
@@ -20,9 +21,9 @@ export async function sendMail(mailDetails: any) {
         return e;
     }
 }
-export async function mailResetPasswordLink(email: string, token: string, origin: string, path:string) {
+export async function mailResetPasswordLink(email: string, token: string, origin: string, path:string, who:userEnum) {
     path = path.replace(/^\/|\/$/g, '');
-    const link = `${origin}/${path}/${email}&${token}`;
+    const link = `${origin}/${path}/${email}&${token}&${who}`
 
     const message = "Click the link below to reset your password\n\n" + link;
     const options = {

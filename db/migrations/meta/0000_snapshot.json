@@ -1,7 +1,7 @@
 {
   "version": "5",
   "dialect": "mysql",
-  "id": "325df272-6157-4629-aa95-d4e2e9ced5f3",
+  "id": "119dd2c6-b0d9-4143-a6d3-6924c3adfb2b",
   "prevId": "00000000-0000-0000-0000-000000000000",
   "tables": {
     "appointment": {
@@ -76,6 +76,65 @@
       },
       "uniqueConstraints": {}
     },
+    "chats": {
+      "name": "chats",
+      "columns": {
+        "id": {
+          "name": "id",
+          "type": "int",
+          "primaryKey": false,
+          "notNull": true,
+          "autoincrement": true
+        },
+        "student_id": {
+          "name": "student_id",
+          "type": "int",
+          "primaryKey": false,
+          "notNull": true,
+          "autoincrement": false
+        },
+        "chats": {
+          "name": "chats",
+          "type": "json",
+          "primaryKey": false,
+          "notNull": false,
+          "autoincrement": false
+        },
+        "created_at": {
+          "name": "created_at",
+          "type": "datetime",
+          "primaryKey": false,
+          "notNull": true,
+          "autoincrement": false,
+          "default": "CURRENT_TIMESTAMP"
+        }
+      },
+      "indexes": {},
+      "foreignKeys": {
+        "chats_student_id_student_id_fk": {
+          "name": "chats_student_id_student_id_fk",
+          "tableFrom": "chats",
+          "tableTo": "student",
+          "columnsFrom": [
+            "student_id"
+          ],
+          "columnsTo": [
+            "id"
+          ],
+          "onDelete": "no action",
+          "onUpdate": "no action"
+        }
+      },
+      "compositePrimaryKeys": {
+        "chats_id": {
+          "name": "chats_id",
+          "columns": [
+            "id"
+          ]
+        }
+      },
+      "uniqueConstraints": {}
+    },
     "counselor": {
       "name": "counselor",
       "columns": {
@@ -136,6 +195,93 @@
       },
       "uniqueConstraints": {}
     },
+    "events": {
+      "name": "events",
+      "columns": {
+        "id": {
+          "name": "id",
+          "type": "int",
+          "primaryKey": false,
+          "notNull": true,
+          "autoincrement": true
+        },
+        "title": {
+          "name": "title",
+          "type": "varchar(30)",
+          "primaryKey": false,
+          "notNull": true,
+          "autoincrement": false
+        },
+        "description": {
+          "name": "description",
+          "type": "varchar(30)",
+          "primaryKey": false,
+          "notNull": false,
+          "autoincrement": false
+        },
+        "schedule_date": {
+          "name": "schedule_date",
+          "type": "date",
+          "primaryKey": false,
+          "notNull": true,
+          "autoincrement": false
+        },
+        "schedule_time": {
+          "name": "schedule_time",
+          "type": "time",
+          "primaryKey": false,
+          "notNull": true,
+          "autoincrement": false
+        },
+        "venue": {
+          "name": "venue",
+          "type": "varchar(30)",
+          "primaryKey": false,
+          "notNull": false,
+          "autoincrement": false
+        },
+        "counselor": {
+          "name": "counselor",
+          "type": "int",
+          "primaryKey": false,
+          "notNull": true,
+          "autoincrement": false
+        },
+        "created_at": {
+          "name": "created_at",
+          "type": "datetime",
+          "primaryKey": false,
+          "notNull": true,
+          "autoincrement": false,
+          "default": "CURRENT_TIMESTAMP"
+        }
+      },
+      "indexes": {},
+      "foreignKeys": {
+        "events_counselor_counselor_id_fk": {
+          "name": "events_counselor_counselor_id_fk",
+          "tableFrom": "events",
+          "tableTo": "counselor",
+          "columnsFrom": [
+            "counselor"
+          ],
+          "columnsTo": [
+            "id"
+          ],
+          "onDelete": "no action",
+          "onUpdate": "no action"
+        }
+      },
+      "compositePrimaryKeys": {
+        "events_id": {
+          "name": "events_id",
+          "columns": [
+            "id"
+          ]
+        }
+      },
+      "uniqueConstraints": {}
+    },
     "student": {
       "name": "student",
       "columns": {
@@ -154,8 +300,8 @@
           "autoincrement": false,
           "default": "'Anonymous'"
         },
-        "psuedonym": {
-          "name": "psuedonym",
+        "pseudonym": {
+          "name": "pseudonym",
           "type": "varchar(30)",
           "primaryKey": false,
           "notNull": false,
@@ -178,13 +324,6 @@
         "contact": {
           "name": "contact",
           "type": "varchar(1024)",
-          "primaryKey": false,
-          "notNull": false,
-          "autoincrement": false
-        },
-        "chats": {
-          "name": "chats",
-          "type": "json",
           "primaryKey": false,
           "notNull": false,
           "autoincrement": false
@@ -216,10 +355,10 @@
         }
       },
       "uniqueConstraints": {
-        "student_psuedonym_unique": {
-          "name": "student_psuedonym_unique",
+        "student_pseudonym_unique": {
+          "name": "student_pseudonym_unique",
           "columns": [
-            "psuedonym"
+            "pseudonym"
           ]
         }
       }

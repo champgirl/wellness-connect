@@ -6,11 +6,10 @@ import {appointment} from "./appointment";
 export const student = mysqlTable('student', {
     id: int('id').notNull().primaryKey().autoincrement(),
     name: varchar('name', {length: 30}).default("Anonymous"),
-    psuedonym: varchar('psuedonym', {length: 30}).unique(),
+    pseudonym: varchar('pseudonym', {length: 30}).unique(),
     password: varchar('password', {length: 256}),
     email: varchar('email', {length: 1024}),
     contact: varchar('contact', {length: 1024}),
-    chats: json('chats'),
     reg_no: varchar('reg_no', {length: 20}),
     cratedAt: datetime('created_at').default(sql`CURRENT_TIMESTAMP`).notNull()
 })

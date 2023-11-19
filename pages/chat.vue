@@ -1,16 +1,17 @@
 <template>
   <Title>JPT | Chat</Title>
-  <img src="/images/chat-bg-2.jpg" alt="chat image" class="background-image">
-  <div class="container">
-    <div class="main-column">
+  <component is="style">
+    .footer{
+      display: none
+    }
+  </component>
+  <div class="my-container">
+    <div class="main-column" ref="mainColumn">
       <div class="completion">
         <div v-for="(message, index) in prompt.messages" :key="index">
-          <div v-if="message.role === 'system'" class="message system-message">
-            <p>{{ message.content }}</p>
-          </div>
-          <div v-else-if="message.role === 'user'"
+          <div v-if="message.role === 'user'"
                class="message user-message">
-            <p>{{ message.content }}</p>
+            <NuxtMarkdown :markdownText="message.content as string"/>
           </div>
           <div v-else-if="message.role === 'assistant'"
                class="message assistant-message">
@@ -30,15 +31,17 @@
           </div>
         </div>
       </div>
+
       <div class="query">
         <div class="field">
           <div>
-                        <textarea class="textarea" type="text" placeholder="Type your message here..."
-                                  v-model="textInput"></textarea>
-            <button class="button is-success" :class="{ 'is-loading': loading, 'is-success': processing }"
-                    @click="getChatCompletion" id="sendCompletionRequest">Send
-            </button>
+            <textarea class="my-textarea" type="text" placeholder="Type your message here..."
+                      v-model="textInput">
+            </textarea>
           </div>
+          <button class="my-button is-success" :class="{ 'is-loading': loading, 'is-success': processing }"
+                  @click="getChatCompletion" id="sendCompletionRequest">Send
+          </button>
         </div>
       </div>
     </div>
@@ -46,6 +49,7 @@
 </template>
 <script setup lang="ts">
 import type {HttpResponse} from "@/types";
+const mainColumn = ref<HTMLElement | null>(null)
 
 const completion = ref('')
 const textInput = ref('')
@@ -62,6 +66,17 @@ const prompt = reactive({
   messages: [] as message[]
 })
 
+const messages = await useFetch('/api/chat/get').then(res => {
+  if(!res) return []
+  if(!res.data.value) return []
+  if(res.data.value.statusCode === 200) return JSON.parse(res.data.value.body.chats)
+  else return []
+}).catch(err => {
+  console.error(err)
+  return []
+})
+
+prompt.messages = messages
 const decoder = new TextDecoder()
 
 async function readStream(reader: ReadableStreamDefaultReader, callback: Function | null = null) {
@@ -100,9 +115,11 @@ async function getChatCompletion() {
     const streamReader = await response.getReader()
     let res: HttpResponse[]
 
-    if (streamReader){
+    if (streamReader) {
       processing.value = true
       loading.value = false
+
+      scrollChatBottom()
 
       textInput.value = ''
       completion.value = ''
@@ -129,6 +146,8 @@ async function getChatCompletion() {
         console.error("Error parsing JSON:", error);
         console.log(text);
       }
+
+      scrollChatBottom()
     })
 
     resolve("ok")
@@ -136,16 +155,31 @@ async function getChatCompletion() {
 
   processing.value = false
 
-  prompt.messages.push({
+  const newMessage = {
     role: 'assistant',
     content: completion.value
+  } as message
+
+  prompt.messages.push(newMessage)
+
+  await $fetch('/api/chat/store', {
+    method: 'POST',
+    body: JSON.stringify({
+      messages: prompt.messages,
+      studentId: useUser().value?.id
+    })
   })
+
 }
 
+function scrollChatBottom(){
+  if(!mainColumn.value) return
+  mainColumn.value.scrollTop = mainColumn.value.scrollHeight
+}
 
 onMounted(() => {
   const sendButton = document.getElementById('sendCompletionRequest')
-  const textArea = document.querySelector('.textarea')
+  const textArea = document.querySelector('.my-textarea')
 
   // @ts-ignore
   textArea?.addEventListener('keydown', (e: any) => {
@@ -154,77 +188,134 @@ onMounted(() => {
       sendButton?.click()
     }
   })
+
+  scrollChatBottom()
 })
 </script>
 <style scoped lang="scss">
-.background-image {
-  width: 100vw;
-  height: 100vh;
-  object-fit: cover;
-  position: absolute;
-  top: 0;
-  z-index: -1;
-}
-.main-column {
-  margin: 0 auto;
-  height: 85vh;
-  height: 85dvh;
-  font-size: 0.9em;
-  display: flex;
-  flex-direction: column;
+.my-container {
+  overflow-y: hidden;
+  background-image: url("/images/chat-bg-2.jpg");
 
-  @media screen and (max-width: 768px) {
-    width: 100vw;
-  }
+  .main-column {
+    max-height: 85vh;
+    overflow-y: scroll;
+    margin-bottom: 5rem;
 
-  @media screen and (min-width: 1280px) {
-    width: 700px;
-  }
+    .completion {
+      width: 60%;
+      margin: auto;
+      margin-top: 1rem;
+      display: flex;
+      flex-direction: column;
+      gap: 1rem;
 
-  .query {
-    position: fixed;
-    height: 5ch;
-    left: 0;
-    width: 100%;
-    bottom: 1vh;
+      .message {
+        padding: 1rem;
+        color: black;
 
-    .field {
-      width: 100%;
+        &.assistant-message {
+          background: rgba(127, 143, 182, 0.7);
 
-      div {
+          @keyframes loading-dot-animation {
+            0% {
+              transform: scale(0.5);
+            }
+
+            50% {
+              transform: scale(1);
+            }
+
+            100% {
+              transform: scale(0.5);
+            }
+          }
+
+          .loading-dot-ul-animation-container {
+            display: flex;
+            flex-direction: row;
+            align-items: center;
+          }
+
+          .loading-dot-animation {
+            display: flex;
+            align-items: center;
+            margin-left: 0.5em;
+
+            .dot {
+              display: inline-block;
+              width: 1em;
+              height: 1em;
+              border-radius: 50%;
+              background-color: #1d202c;
+              animation: loading-dot-animation 1s infinite ease-in-out;
+              margin-right: 0.5em;
+
+              &:nth-child(1) {
+                animation-delay: 0s;
+              }
+
+              &:nth-child(2) {
+                animation-delay: 0.2s;
+              }
+
+              &:nth-child(3) {
+                animation-delay: 0.4s;
+              }
+            }
+          }
+        }
+
+        &.user-message {
+          background-color: rgba(119, 119, 119, 0.7);
+        }
+      }
+    }
+
+    .query {
+      position: fixed;
+      bottom: 0;
+      width: 50%;
+      transform: translateX(50%);
+      right: 50%;
+
+      .field {
         display: flex;
-        flex-direction: row;
         align-items: center;
+        justify-content: center;
         position: relative;
 
-        .textarea {
-          min-height: unset;
-          min-width: unset;
+        .my-textarea {
+          height: 3rem;
+          padding: 0.25em;
+          resize: none;
           max-width: 80vw;
           max-width: 80dvw;
           width: 500px;
-          overflow: hidden;
-          resize: none;
-          height: fit-content;
-          margin: auto;
+          margin: 0;
           font-family: 'Roboto Mono', monospace;
           font-size: 0.9em;
           border-radius: 5px;
           padding-left: 0.5em;
           padding-top: 0.5em;
-          margin-top: -20px;
+
+          &:focus {
+            outline: none;
+          }
         }
 
-        .button {
+        .my-button {
           border: none;
-          position: absolute;
-          left: calc(50vw + 250px);
+          height: 5ch;
           margin-top: 0.6px;
           background-color: transparent;
           color: hsl(0, 0%, 0%, 0.5);
-          transform: translateX(-120%);
+          position: absolute;
+          width: 3.5rem;
+          right: 2.2rem;
+          border-radius: 5px;
           opacity: 0.5;
-          margin-top: -20px;
+          margin-top: -5px;
 
           &:hover {
             cursor: pointer;
@@ -233,7 +324,7 @@ onMounted(() => {
           }
 
           &.is-success {
-            background-color: #85b690;
+            background-color: var(--accent);
             color: white;
           }
 
@@ -247,121 +338,5 @@ onMounted(() => {
       }
     }
   }
-
-  .completion {
-    display: flex;
-    flex-direction: column;
-    justify-content: space-around;
-    width: 500px;
-    max-width: 90vw;
-    margin: 0.5em auto;
-
-    .message {
-      margin-bottom: 0.5em;
-      padding: 0.5em;
-
-      &.user-message {
-        background-color: #1c1f42;
-        color: white;
-        border-radius: 5px 5px 5px 0;
-      }
-
-      &.assistant-message {
-        background-color: #85b4b6;
-        color: black;
-        border-radius: 5px 5px 0 5px;
-
-        @keyframes loading-dot-animation {
-          0% {
-            transform: scale(0.5);
-          }
-
-          50% {
-            transform: scale(1);
-          }
-
-          100% {
-            transform: scale(0.5);
-          }
-        }
-
-        .loading-dot-ul-animation-container {
-          display: flex;
-          flex-direction: row;
-          align-items: center;
-        }
-
-        .loading-dot-animation {
-          display: flex;
-          align-items: center;
-          margin-left: 0.5em;
-
-          .dot {
-            display: inline-block;
-            width: 1em;
-            height: 1em;
-            border-radius: 50%;
-            background-color: #1d202c;
-            animation: loading-dot-animation 1s infinite ease-in-out;
-            margin-right: 0.5em;
-
-            &:nth-child(1) {
-              animation-delay: 0s;
-            }
-
-            &:nth-child(2) {
-              animation-delay: 0.2s;
-            }
-
-            &:nth-child(3) {
-              animation-delay: 0.4s;
-            }
-          }
-        }
-      }
-
-      &.system-message {
-        background-color: var(--accent);
-        border-radius: 5px 5px 5px 5px;
-      }
-    }
-  }
-}
-
-.code-container {
-  position: relative;
-  padding: 0.5em 1em;
-  border: 1px solid #ccc;
-  border-radius: 0.25em;
-  margin-bottom: 1rem;
-  margin-top: 1rem;
-  background-color: #f5f5f5;
-  overflow-x: scroll;
-  transition: all 0.2s ease-in-out;
-
-  &:hover {
-    border-color: #aaa;
-  }
-
-  .copy-code-button {
-    position: absolute;
-    top: 0;
-    right: 0;
-    padding: 0.5rem;
-    background-color: #fff;
-    border: 1px solid #ccc;
-    border-radius: 0.25rem;
-    cursor: pointer;
-    transition: all 0.2s ease-in-out;
-
-    &:hover {
-      background-color: #ccc;
-    }
-  }
-}
-
-code {
-  font-family: 'Roboto Mono', monospace;
-  font-size: 0.85em;
 }
 </style>

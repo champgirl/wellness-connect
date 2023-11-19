@@ -19,7 +19,7 @@ router.post('/update', defineEventHandler(async event => {
     return updatePassword(event)
 }))
 
-router.post('/logout', defineEventHandler(async event => {
+router.get('/logout', defineEventHandler(async event => {
     return logout(event)
 }))
 
