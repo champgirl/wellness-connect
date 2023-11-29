@@ -48,6 +48,9 @@
 import {userEnum} from "~/types";
 import {setAuthCookie} from "~/helpers.client";
 
+const route = useRoute()
+const redirectTo = route.query.redirect ?? null
+
 const details = reactive({
   pseudonym: '',
   password: ''
@@ -67,7 +70,12 @@ async function login() {
 
   if (response.statusCode === 200) {
     setAuthCookie(response.body)
-    await navigateTo('/')
+
+    if (redirectTo) {
+      await navigateTo(decodeURI(redirectTo.toString()))
+    } else {
+      await navigateTo('/')
+    }
   } else alert(response.body)
 }
 </script>

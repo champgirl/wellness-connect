@@ -1,13 +1,13 @@
 import type {Chat} from "~/db/schema/chats";
 import db from "~/db/db";
 import {chats} from "~/db/schema/chats";
-import {eq} from "drizzle-orm";
+import {eq, and} from "drizzle-orm";
 
 export async function storeChat(chat: Chat) {
     // check if chat exists using the student id
     const existingChat = await db.select({
         studentId: chats.studentId
-    }).from(chats).where(eq(chats.studentId, chat.studentId))
+    }).from(chats).where(and(eq(chats.studentId, chat.studentId), eq(chats.isDeleted, false)))
         .then(data => {
             if (data) return data[0]
             return null
@@ -46,10 +46,23 @@ export async function getChats(studentId: number) {
     const result = await db
         .select()
         .from(chats)
-        .where(eq(chats.studentId, studentId))
+        .where(and(eq(chats.studentId, studentId), eq(chats.isDeleted, false)))
         .catch((e) => {
             throw e as Error
         })
 
-    return result[0] ?? null
+    return result[0] || null
+}
+
+export async function deleteUserChat(user_id: string | number) {
+    const id = +user_id
+
+    await db.update(chats).set({
+        isDeleted: true
+    }).where(eq(chats.studentId, id))
+        .catch(err => {
+            throw err
+        })
+
+    return true
 }

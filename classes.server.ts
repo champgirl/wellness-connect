@@ -51,6 +51,7 @@ export class GPTChatQueueItem {
     }
 
     async stream() {
+        console.log(this._gptChat)
         try {
             const completion = await openai.chat.completions.create({
                 ...this._gptChat,
@@ -66,7 +67,7 @@ export class GPTChatQueueItem {
             })
 
             for await (const chunk of completion) {
-                console.log(chunk)
+                // console.log(chunk)
                 this._stream.write(JSON.stringify(
                     {
                         statusCode: 201,

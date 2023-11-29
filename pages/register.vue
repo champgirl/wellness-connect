@@ -133,7 +133,6 @@ onBeforeRouteUpdate(
   &__register {
     font-size: var(--small-font-size);
     font-family: 'Rubik', sans-serif;
-    color: var(--white-color);
   }
 
   &__check-group {
@@ -146,7 +145,6 @@ onBeforeRouteUpdate(
   }
 
   &__forgot {
-    color: var(--accent);
 
     &:hover {
       text-decoration: underline;
@@ -173,7 +171,6 @@ onBeforeRouteUpdate(
     text-align: center;
 
     & a {
-      color: var(--accent);
       font-weight: var(--font-medium);
 
       &:hover {

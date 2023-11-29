@@ -66,6 +66,9 @@ import type { CounselorRegister } from "@/types";
 const password1 = ref('')
 const password2 = ref('')
 
+const route = useRoute()
+const redirectTo = route.query.redirect ?? null
+
 const details = reactive<CounselorRegister>({
    name: '',
    email: '',
@@ -95,7 +98,9 @@ async function signup() {
 
    if (!response) return alert("Fatal: Fetch Failed")
 
-   console.log(response)
+  if(redirectTo) return navigateTo(decodeURI(redirectTo as string))
+
+  await navigateTo('/')
 }
 
 

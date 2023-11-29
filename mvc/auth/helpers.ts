@@ -95,3 +95,23 @@ export function checkHash(plaintext: string | null, hash: string | null): boolea
     if (!plaintext || !hash) return false
     return hashData(plaintext) === hash
 }
+
+
+export function encryptData(plaintext: string, key: string){
+    key = key.substring(0, 32);
+    const iv = crypto.randomBytes(16); // Initialization vector
+    const cipher = crypto.createCipheriv('aes-256-cbc', Buffer.from(key), iv);
+    let encrypted = cipher.update(plaintext, 'utf-8', 'hex');
+    encrypted += cipher.final('hex');
+    return `${iv.toString('hex')}:${encrypted}`;
+}
+
+export function decryptData(encryptedText: string, key: string){
+    key = key.substring(0, 32);
+    const [ivHex, encrypted] = encryptedText.split(':');
+    const iv = Buffer.from(ivHex, 'hex');
+    const decipher = crypto.createDecipheriv('aes-256-cbc', Buffer.from(key), iv);
+    let decrypted = decipher.update(encrypted, 'hex', 'utf-8');
+    decrypted += decipher.final('utf-8');
+    return decrypted;
+}

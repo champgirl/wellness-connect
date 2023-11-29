@@ -71,6 +71,21 @@
       </div>
       <button type="submit" class="login__button">Sign Up</button>
     </form>
+    <div id="open-modal" class="modal-window">
+      <div>
+        <a href="#" title="Close" class="modal-close"></a>
+        <h1>Voilà!</h1>
+        <div>
+          <p>Welcome, You will use this anonymous pseudonym to log in to your account <b><span
+              id="pseudonym"></span></b></p>
+          <div class="buttons mt-4">
+            <span class="mr-1 hidden" id="copy-success">Copied!</span>
+            <button @click="copyName" class="btn">Copy</button>
+            <button @click="proceed" class="btn ml-4">Proceed</button>
+          </div>
+        </div>
+      </div>
+    </div>
   </div>
 </template>
 <style scoped lang="scss">
@@ -78,6 +93,113 @@ input[type="checkbox"] {
   accent-color: var(--primary-color);
 }
 
+.hidden {
+  display: none;
+}
+
+#pseudonym {
+  color: #00e7eb;
+  font-size: large;
+}
+
+#pseudonym:before {
+  content: "`";
+}
+
+#pseudonym:after {
+  content: "`";
+}
+
+.modal-window {
+  position: absolute;
+  background-color: rgba(255, 255, 255, 0.25);
+  top: -200px;
+  right: 0;
+  bottom: 0;
+  left: 0;
+  z-index: 999;
+  visibility: hidden;
+  opacity: 0;
+  pointer-events: none;
+  transition: all 0.3s;
+
+  &:target {
+    visibility: visible;
+    opacity: 1;
+    pointer-events: auto;
+  }
+
+  & > div {
+    width: 400px;
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%);
+    padding: 2em;
+    background: var(--primary);
+  }
+
+  header {
+    font-weight: bold;
+  }
+
+  h1 {
+    font-size: 150%;
+    margin: 0 0 0.2em;
+  }
+}
+
+.modal-close {
+  color: var(--accent);
+  line-height: 50px;
+  font-size: 80%;
+  position: absolute;
+  right: 4px;
+  text-align: center;
+  top: 5px;
+  width: 70px;
+  text-decoration: none;
+
+  &:hover {
+    color: black;
+  }
+}
+
+.modal-window {
+  & > div {
+    border-radius: 1rem;
+  }
+}
+
+.modal-window div:not(:last-of-type) {
+  margin-bottom: 15px;
+}
+
+.logo {
+  max-width: 150px;
+  display: block;
+}
+
+small {
+  color: black;
+}
+
+.buttons {
+  display: flex;
+  justify-content: right;
+  align-items: center;
+}
+
+.btn {
+  background-color: white;
+  padding: 0.8em 1em;
+  border-radius: 0.2rem;
+  text-decoration: none;
+
+  i {
+    padding-right: 0.3em;
+  }
+}
 </style>
 <script setup lang="ts">
 import type {StudentRegister} from "@/types";
@@ -86,6 +208,9 @@ import {setAuthCookie} from "~/helpers.client";
 const password1 = ref('')
 const password2 = ref('')
 
+const route = useRoute()
+const redirectTo = route.query.redirect ?? null
+
 const details = reactive<StudentRegister>({
   name: '',
   email: '',
@@ -93,6 +218,25 @@ const details = reactive<StudentRegister>({
   contact: '',
   reg_no: ''
 })
+
+function copyName() {
+  const nameHolder = document.getElementById('pseudonym')
+  const name = nameHolder!.innerText
+
+  navigator.clipboard.writeText(name)
+
+  const copySuccess = document.getElementById('copy-success')
+  copySuccess!.classList.remove('hidden')
+  setTimeout(() => {
+    copySuccess!.classList.add('hidden')
+  }, 1000)
+}
+
+async function proceed() {
+  if(redirectTo) return navigateTo(decodeURI(redirectTo as string))
+
+  await navigateTo("/")
+}
 
 
 async function signup() {
@@ -118,11 +262,23 @@ async function signup() {
 
   if (response.statusCode !== 200) return alert(response.body)
 
-  await setAuthCookie(response.body)
+  setAuthCookie(response.body)
 
-  await navigateTo("/")
+  const name = response.body.name
 
-  console.log(response)
+  if (process.client) {
+    const nameHolder = document.getElementById('pseudonym')
+    nameHolder!.innerText = name
+
+
+    const modal_show = document.createElement('a')
+    modal_show.setAttribute('href', '#open-modal')
+    modal_show.setAttribute('class', 'modal-trigger')
+    modal_show.setAttribute('data-target', 'modal1')
+    modal_show.innerHTML = name
+    modal_show.click()
+    modal_show.remove()
+  }
 }
 
 onMounted(() => {

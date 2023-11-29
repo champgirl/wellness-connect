@@ -20,8 +20,6 @@ export async function completeGPT(event: H3Event) {
 
     gptChat.messages = gptChat.messages.concat(messages)
 
-    console.log(gptChat)
-
     addRequestToGlobalProcessingQueue(event, gptChat)
 }
 

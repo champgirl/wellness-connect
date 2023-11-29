@@ -17,7 +17,7 @@
           <NuxtLink class="navbar-item" to="/">
             News & Events
           </NuxtLink>
-          <NuxtLink class="navbar-item" to="/Appointments">
+          <NuxtLink class="navbar-item" to="/appointments">
             Appointments
           </NuxtLink>
         </div>
@@ -46,8 +46,8 @@
                   </a>
 
                   <div class="navbar-dropdown">
-                    <NuxtLink class="navbar-item" :to="`/register?user=${userEnum.STUDENT}`">Student</NuxtLink>
-                    <NuxtLink class="navbar-item" :to="`/register?user=${userEnum.COUNSELOR}`">Counselor</NuxtLink>
+                    <NuxtLink class="navbar-item" :to="`/register?user=${userEnum.STUDENT}&redirect=${encodeURI($route.path)}`">Student</NuxtLink>
+                    <NuxtLink class="navbar-item" :to="`/register?user=${userEnum.COUNSELOR}&redirect=${encodeURI($route.path)}`">Counselor</NuxtLink>
                   </div>
                 </div>
                 <div class="navbar-item has-dropdown is-hoverable">
@@ -56,8 +56,8 @@
                   </a>
 
                   <div class="navbar-dropdown">
-                    <NuxtLink class="navbar-item" :to="`/login?user=${userEnum.STUDENT}`">Student</NuxtLink>
-                    <NuxtLink class="navbar-item" :to="`/login?user=${userEnum.COUNSELOR}`">Counselor</NuxtLink>
+                    <NuxtLink class="navbar-item" :to="`/login?user=${userEnum.STUDENT}&redirect=${encodeURI($route.path)}`">Student</NuxtLink>
+                    <NuxtLink class="navbar-item" :to="`/login?user=${userEnum.COUNSELOR}&redirect=${encodeURI($route.path)}`">Counselor</NuxtLink>
                   </div>
                 </div>
               </div>

@@ -8,7 +8,7 @@ import type {
 } from "~/types";
 import {TokenType, userEnum} from '~/types';
 import db from "~/db/db";
-import {hashData, checkHash} from "~/mvc/auth/helpers";
+import {hashData, checkHash, encryptData} from "~/mvc/auth/helpers";
 import {v4 as uuidv4} from "uuid";
 import {tokens} from "~/db/schema/tokens";
 import {and, eq} from "drizzle-orm";
@@ -144,6 +144,9 @@ async function registerStudent(data: StudentRegister) {
     const {password, ...rest} = data
 
     rest.email = hashData(data.email)
+    rest.name = encryptData(rest.name, rest.email)
+    rest.contact = encryptData(rest.contact, rest.email)
+    rest.reg_no = encryptData(rest.reg_no, rest.email)
 
     const name = uniqueNamesGenerator(configNames)
     await db.insert(student)
@@ -173,10 +176,10 @@ export async function getUserFromToken(token: string, type: string, userType: us
     } else if (userType === userEnum.STUDENT) {
         result = await db.select({
             id: student.id,
-            name: student.name,
+            name: student.pseudonym,
             email: student.email
         }).from(student)
-            .innerJoin(tokens, eq(tokens.id, student.id))
+            .innerJoin(tokens, eq(tokens.user_id, student.id))
             .where(and(eq(tokens.isValid, true), eq(tokens.token, token), eq(tokens.type, type)))
     }
 

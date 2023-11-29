@@ -6,17 +6,28 @@
 </template>
 <script setup lang="ts">
 import {userEnum} from '@/types';
+import {userIsAuthenticated} from "~/helpers.client";
 
 const counselorLogin = resolveComponent('CounselorLogin')
 const studentLogin = resolveComponent('StudentLogin')
 
+
 const route = useRoute();
+const redirectTo = route.query.redirect ?? null
 const who = ref(route.query.user);
 
 onBeforeRouteUpdate(
     (newRoute) => {
       who.value = newRoute.query.user
     })
+
+onMounted(async () => {
+  // if(userIsAuthenticated()) {
+  //   setTimeout(async () => {
+  //     await navigateTo(redirectTo?.toString() ?? '/')
+  //   }, 2000)
+  // }
+})
 </script>
 
 <style lang="scss">
@@ -133,7 +144,6 @@ onBeforeRouteUpdate(
   &__register {
     font-size: var(--small-font-size);
     font-family: 'Rubik', sans-serif;
-    color: var(--white-color);
   }
 
   &__check-group {
@@ -146,7 +156,6 @@ onBeforeRouteUpdate(
   }
 
   &__forgot {
-    color: var(--accent);
 
     &:hover {
       text-decoration: underline;
@@ -173,7 +182,6 @@ onBeforeRouteUpdate(
     text-align: center;
 
     & a {
-      color: var(--accent);
       font-weight: var(--font-medium);
 
       &:hover {

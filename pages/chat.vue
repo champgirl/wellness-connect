@@ -2,7 +2,7 @@
   <Title>JPT | Chat</Title>
   <component is="style">
     .footer{
-      display: none
+    display: none
     }
   </component>
   <div class="my-container">
@@ -34,14 +34,18 @@
 
       <div class="query">
         <div class="field">
-          <div>
+          <div class="relative is-flex is-align-items-center">
+            <button class="button clear-button is-info mr-2"
+                    @click="clearChats">Clear
+            </button>
             <textarea class="my-textarea" type="text" placeholder="Type your message here..."
                       v-model="textInput">
             </textarea>
+
+            <button class="button is-success ml-2" :class="{ 'is-loading': loading, 'is-success': processing }"
+                    @click="getChatCompletion" id="sendCompletionRequest">Send
+            </button>
           </div>
-          <button class="my-button is-success" :class="{ 'is-loading': loading, 'is-success': processing }"
-                  @click="getChatCompletion" id="sendCompletionRequest">Send
-          </button>
         </div>
       </div>
     </div>
@@ -49,6 +53,9 @@
 </template>
 <script setup lang="ts">
 import type {HttpResponse} from "@/types";
+import {userEnum} from "@/types";
+import {userIsAuthenticated} from "~/helpers.client";
+
 const mainColumn = ref<HTMLElement | null>(null)
 
 const completion = ref('')
@@ -56,6 +63,11 @@ const textInput = ref('')
 
 const loading = ref(false)
 const processing = ref(false)
+
+const route = useRoute()
+const user = useUser()
+
+if (!userIsAuthenticated()) await navigateTo(`/login?redirect=${route.path}&user=${userEnum.STUDENT}`)
 
 type message = {
   role: 'user' | 'assistant'
@@ -66,17 +78,21 @@ const prompt = reactive({
   messages: [] as message[]
 })
 
-const messages = await useFetch('/api/chat/get').then(res => {
-  if(!res) return []
-  if(!res.data.value) return []
-  if(res.data.value.statusCode === 200) return JSON.parse(res.data.value.body.chats)
-  else return []
-}).catch(err => {
-  console.error(err)
-  return []
-})
+async function fetchMessages() {
+  prompt.messages = await useFetch('/api/chat/get').then(res => {
+    if (!res) return []
+    if (!res.data.value) return []
+    console.log(res.data.value)
+    if (res.data.value.statusCode === 200) return JSON.parse(res.data.value.body?.chats || '[]')
+    else return []
+  }).catch(err => {
+    console.error(err)
+    return []
+  })
+}
 
-prompt.messages = messages
+fetchMessages()
+
 const decoder = new TextDecoder()
 
 async function readStream(reader: ReadableStreamDefaultReader, callback: Function | null = null) {
@@ -169,12 +185,23 @@ async function getChatCompletion() {
       studentId: useUser().value?.id
     })
   })
-
 }
 
-function scrollChatBottom(){
-  if(!mainColumn.value) return
+function scrollChatBottom() {
+  if (!mainColumn.value) return
   mainColumn.value.scrollTop = mainColumn.value.scrollHeight
+}
+
+async function clearChats() {
+  const response = await $fetch('/api/chat/clear').then(
+      res => {
+        console.log(res)
+        return res
+      })
+
+  if (response.statusCode === 200) {
+    prompt.messages = []
+  }
 }
 
 onMounted(() => {
@@ -190,12 +217,19 @@ onMounted(() => {
   })
 
   scrollChatBottom()
+
+  if (prompt.messages.length === 0) {
+    fetchMessages()
+  }
 })
 </script>
 <style scoped lang="scss">
 .my-container {
   overflow-y: hidden;
-  background-image: url("/images/chat-bg-2.jpg");
+  background-image: url("/images/chat.jpg");
+  background-repeat: no-repeat;
+  background-size: cover;
+
 
   .main-column {
     max-height: 85vh;
@@ -304,18 +338,8 @@ onMounted(() => {
           }
         }
 
-        .my-button {
-          border: none;
-          height: 5ch;
-          margin-top: 0.6px;
-          background-color: transparent;
-          color: hsl(0, 0%, 0%, 0.5);
-          position: absolute;
-          width: 3.5rem;
-          right: 2.2rem;
-          border-radius: 5px;
-          opacity: 0.5;
-          margin-top: -5px;
+        .button {
+          height: 2.7rem;
 
           &:hover {
             cursor: pointer;

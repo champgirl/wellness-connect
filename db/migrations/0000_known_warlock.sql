@@ -1,7 +1,8 @@
 CREATE TABLE `appointment` (
 	`id` int AUTO_INCREMENT NOT NULL,
-	`student_id` int,
-	`counselor_id` int,
+	`student_id` int NOT NULL,
+	`counselor_id` int NOT NULL,
+	`appointment_date_time` datetime NOT NULL,
 	`created_at` datetime NOT NULL DEFAULT CURRENT_TIMESTAMP,
 	CONSTRAINT `appointment_id` PRIMARY KEY(`id`)
 );
@@ -10,6 +11,7 @@ CREATE TABLE `chats` (
 	`id` int AUTO_INCREMENT NOT NULL,
 	`student_id` int NOT NULL,
 	`chats` json,
+	`is_deleted` boolean NOT NULL DEFAULT false,
 	`created_at` datetime NOT NULL DEFAULT CURRENT_TIMESTAMP,
 	CONSTRAINT `chats_id` PRIMARY KEY(`id`)
 );
