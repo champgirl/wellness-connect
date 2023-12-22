@@ -14,9 +14,6 @@
           <NuxtLink class="navbar-item" to="/">
             Home
           </NuxtLink>
-          <NuxtLink class="navbar-item" to="/">
-            News & Events
-          </NuxtLink>
           <NuxtLink class="navbar-item" to="/appointments">
             Appointments
           </NuxtLink>
@@ -25,7 +22,7 @@
         <div class="navbar-end">
           <div class="navbar-item">
             <div class="buttons">
-              <NuxtLink class="navbar-item" to="/chat">
+              <NuxtLink class="navbar-item" to="/chat" v-if="!isAdmin()">
                 <div class="svg-chat-container">
                   <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24">
                     <path
@@ -79,6 +76,13 @@
 import {userEnum} from '~/types'
 import {useUser} from "~/composables/state";
 import {removeAuthCookie} from "~/helpers.client";
+
+function isAdmin(){
+  const user = useUser().value
+  if(user?.email.includes('@')) return true
+  return false
+}
+
 
 async function logout() {
   const response = await useFetch('/api/auth/logout', {

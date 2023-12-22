@@ -69,6 +69,7 @@ async function login() {
   if (!response) return alert("Fatal: Fetch Failed")
 
   if (response.statusCode === 200) {
+    console.log(response.body)
     setAuthCookie(response.body)
     await navigateTo('/')
   } else alert(response.body)

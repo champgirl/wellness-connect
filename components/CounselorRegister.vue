@@ -98,9 +98,7 @@ async function signup() {
 
    if (!response) return alert("Fatal: Fetch Failed")
 
-  if(redirectTo) return navigateTo(decodeURI(redirectTo as string))
-
-  await navigateTo('/')
+  await navigateTo('/login?user=counselor')
 }
 
 

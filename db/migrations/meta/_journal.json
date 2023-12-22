@@ -5,8 +5,22 @@
     {
       "idx": 0,
       "version": "5",
-      "when": 1701161796828,
-      "tag": "0000_known_warlock",
+      "when": 1701554600637,
+      "tag": "0000_bumpy_doomsday",
+      "breakpoints": false
+    },
+    {
+      "idx": 1,
+      "version": "5",
+      "when": 1701560768578,
+      "tag": "0001_orange_warbound",
+      "breakpoints": false
+    },
+    {
+      "idx": 2,
+      "version": "5",
+      "when": 1701562619625,
+      "tag": "0002_chubby_banshee",
       "breakpoints": false
     }
   ]

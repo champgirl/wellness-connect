@@ -6,17 +6,16 @@ import type {
     UpdatePasswordRequest,
     UserState
 } from "~/types";
-import {TokenType, userEnum} from '~/types';
+import { TokenType, userEnum } from '~/types';
 import db from "~/db/db";
-import {hashData, checkHash, encryptData} from "~/mvc/auth/helpers";
-import {v4 as uuidv4} from "uuid";
-import {tokens} from "~/db/schema/tokens";
-import {and, eq} from "drizzle-orm";
-import {mailResetPasswordLink} from "~/mvc/utils";
-import {counselor} from "~/db/schema/counselor";
-import {student} from "~/db/schema/student";
-import {names, uniqueNamesGenerator, type Config as namesConfig} from 'unique-names-generator';
-import {composeNode} from "yaml/dist/compose/compose-node";
+import { hashData, checkHash, encryptData } from "~/mvc/auth/helpers";
+import { v4 as uuidv4 } from "uuid";
+import { tokens } from "~/db/schema/tokens";
+import { and, eq } from "drizzle-orm";
+import { mailResetPasswordLink } from "~/mvc/utils";
+import { counselor } from "~/db/schema/counselor";
+import { student } from "~/db/schema/student";
+import { names, uniqueNamesGenerator, type Config as namesConfig } from 'unique-names-generator';
 
 const configNames: namesConfig = {
     dictionaries: [names]
@@ -53,7 +52,6 @@ export async function loginStudent(data: StudentLoginCredentials, bearer: string
 
 export async function loginCounselor(data: CounselorLoginCredentials, bearer: string | null = null): Promise<UserState | null> {
     let newToken
-
     const db_user = await getCounselorByEmail(data.email).catch(err => {
         console.error(err)
         throw err as Error
@@ -121,7 +119,7 @@ export async function registerCounselor(data: CounselorRegister): Promise<UserSt
     let _user = await getCounselorByEmail(data.email)
 
     if (_user) throw new Error("User already exists")
-    const {password, ...rest} = data
+    const { password, ...rest } = data
 
     await db.insert(counselor)
         .values({
@@ -141,7 +139,7 @@ async function registerStudent(data: StudentRegister) {
     let _user = await getStudentByEmail(data.email)
     if (_user) throw new Error("User already exists")
 
-    const {password, ...rest} = data
+    const { password, ...rest } = data
 
     rest.email = hashData(data.email)
     rest.name = encryptData(rest.name, rest.email)
@@ -220,7 +218,7 @@ export async function getUserByPseudonym(name: string) {
     return userState
 }
 
-async function getStudentByEmail(email: string) {
+export async function getStudentByEmail(email: string) {
     const hashedEmail = hashData(email)
 
     const result = await db.select({
@@ -269,6 +267,7 @@ async function resetUserTokens(id: string | number, type: string, who: userEnum)
 }
 
 export async function getCounselorByEmail(email: string): Promise<UserState & { password: string } | null> {
+    console.log(email)
     let result = await db.select({
         id: counselor.id,
         name: counselor.name,
@@ -424,4 +423,31 @@ export async function requestPasswordReset(data: PasswordResetRequest): Promise<
         })
 
     return true
+}
+
+export async function getUserByEmail(email: string) {
+    let counselor = await getCounselorByEmail(email)
+    if (counselor) return {
+        ...counselor,
+        who: userEnum.COUNSELOR
+    }
+    
+    let student = await getStudentByEmail(email)
+    return {
+        ...student,
+        who: userEnum.STUDENT
+    }
+}
+
+export async function getCounselorsEmails(){
+    let result = await db.select({
+        email: counselor.email
+    }).from(counselor)
+    .catch((e) => {
+        throw e as Error
+    })
+
+    if(!result || result.length === 0) return null
+
+    return result
 }

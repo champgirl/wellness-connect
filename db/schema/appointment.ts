@@ -8,6 +8,7 @@ export const appointment = mysqlTable('appointment', {
     studentId: int('student_id').references(() => student.id).notNull(),
     counselorId: int('counselor_id').references(() => counselor.id).notNull(),
     appointmentDateTime: datetime('appointment_date_time').notNull(),
+    status: int('status').notNull().default(0),
     cratedAt: datetime('created_at').default(sql`CURRENT_TIMESTAMP`).notNull()
 })
 

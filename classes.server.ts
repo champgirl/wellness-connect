@@ -50,6 +50,13 @@ export class GPTChatQueueItem {
         this._gptChat = gptChat;
     }
 
+    flagChat() {
+        console.log('flagged')
+        this._stream.write(JSON.stringify({
+            statusCode: 210
+        }))
+    }
+
     async stream() {
         console.log(this._gptChat)
         try {
@@ -67,11 +74,15 @@ export class GPTChatQueueItem {
             })
 
             for await (const chunk of completion) {
-                // console.log(chunk)
+                
+                const content = chunk.choices[0].delta.content || ''
+
+                if(content.includes('💔')) this.flagChat()
+
                 this._stream.write(JSON.stringify(
                     {
                         statusCode: 201,
-                        body: chunk.choices[0].delta.content || ''
+                        body: content
                     } as HttpResponse
                 ))
             }

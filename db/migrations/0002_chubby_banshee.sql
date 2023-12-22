@@ -1,0 +1,1 @@
+ALTER TABLE `chats` ADD `is_reviewed` boolean DEFAULT false NOT NULL;

@@ -1,6 +1,6 @@
 <template>
   <Title>Privacy Policy</Title>
-  <img src="/images/privacy-policy.jpg" alt="privacy image" class="privacy__img">
+  <div class="image-container">
      <div class="privacy-policy">
 
       <h1>Privacy Policy</h1>
@@ -39,7 +39,7 @@
         <h2>Data Security:</h2>
         <p> We comply legal regulations outlined in The Data Protection Act of 2019 and The Counsellors and Psychologists Act of 2014.<br>
           We implement security measures to protect your data, but no system is entirely secure.<br>
-          We cannot guarantee the security of your data. You are responsible for keeping your login credentials secure.</p>
+          You are responsible for keeping your login credentials secure.</p>
       </section>
       <section>
         <h2>User Consent:</h2>
@@ -47,29 +47,33 @@
       </section>
 
     </div>
+  </div>
   </template>
 <script setup lang="ts">
 
 
 </script>
 
-  <style scoped>
-    .privacy__img {
-      width: 100vw;
-      height: 100vh;
-      object-fit: cover;
-      position: absolute;
+  <style scoped lang="scss">
+  .image-container{
+    background-image: url("/images/privacy-policy.jpg");
+    background-repeat: no-repeat;
+    background-size: cover;
 
 
-    }
+  }
 
     .privacy-policy {
-      background-color: rgba(255, 255, 255, 0.7);
-      backdrop-filter: blur(50px);
+      background-color: rgba(255, 255, 255, 0.4);
+      backdrop-filter: blur(90px);
       max-width: 800px;
+      max-height: fit-content;
+      border-radius: 10px;
+      box-shadow: 0 0 10px rgba(0, 0, 0, 0.3);
       margin: auto;
       padding: 20px;
       font-family: 'Rubik', sans-serif;
+
     }
 
     h1, h2 {

@@ -1,8 +1,8 @@
 {
   "version": "5",
   "dialect": "mysql",
-  "id": "32ef2c81-d5d4-4647-8906-7278b5e2e1b0",
-  "prevId": "00000000-0000-0000-0000-000000000000",
+  "id": "6519e069-f8c1-4ff4-a070-55ea2d41b41d",
+  "prevId": "32ef2c81-d5d4-4647-8906-7278b5e2e1b0",
   "tables": {
     "appointment": {
       "name": "appointment",
@@ -117,6 +117,14 @@
         },
         "is_deleted": {
           "name": "is_deleted",
+          "type": "boolean",
+          "primaryKey": false,
+          "notNull": true,
+          "autoincrement": false,
+          "default": false
+        },
+        "is_flagged": {
+          "name": "is_flagged",
           "type": "boolean",
           "primaryKey": false,
           "notNull": true,

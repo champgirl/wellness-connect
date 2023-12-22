@@ -1,5 +1,6 @@
 import {defineEventHandler, createRouter} from "h3";
 import {register, login, requestReset, updatePassword, logout} from "~/mvc/auth/functions";
+import {getCounselorByEmail} from "~/mvc/auth/queries";
 
 const router = createRouter()
 
@@ -21,6 +22,12 @@ router.post('/update', defineEventHandler(async event => {
 
 router.get('/logout', defineEventHandler(async event => {
     return logout(event)
+}))
+
+router.get('/isAdmin', defineEventHandler(async event => {
+    const counselor = await getCounselorByEmail(JSON.parse(getCookie(event, 'userState') || '{}').email || '')
+    if(!counselor) return {statusCode: 401, body: {isAdmin: false}}
+    return {statusCode: 200, body: {isAdmin: true}}
 }))
 
 export default useBase('/api/auth', router.handler)

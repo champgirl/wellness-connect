@@ -9,17 +9,15 @@
     <div class="main-column" ref="mainColumn">
       <div class="completion">
         <div v-for="(message, index) in prompt.messages" :key="index">
-          <div v-if="message.role === 'user'"
-               class="message user-message">
-            <NuxtMarkdown :markdownText="message.content as string"/>
+          <div v-if="message.role === 'user'" class="message user-message">
+            <NuxtMarkdown :markdownText="message.content as string" />
           </div>
-          <div v-else-if="message.role === 'assistant'"
-               class="message assistant-message">
-            <NuxtMarkdown :markdownText="message.content as string"/>
+          <div v-else-if="message.role === 'assistant'" class="message assistant-message">
+            <NuxtMarkdown :markdownText="message.content as string" />
           </div>
         </div>
         <div class="message assistant-message" v-if="processing && completion !== ''">
-          <NuxtMarkdown :markdownText="completion"/>
+          <NuxtMarkdown :markdownText="completion" />
         </div>
         <div class="message assistant-message" v-if="loading || (processing && completion === '')">
           <div class="loading-dot-ul-animation-container">
@@ -35,15 +33,13 @@
       <div class="query">
         <div class="field">
           <div class="relative is-flex is-align-items-center">
-            <button class="button clear-button is-info mr-2"
-                    @click="clearChats">Clear
+            <button class="button clear-button is-info mr-2" @click="clearChats">Clear
             </button>
-            <textarea class="my-textarea" type="text" placeholder="Type your message here..."
-                      v-model="textInput">
+            <textarea class="my-textarea" type="text" placeholder="Type your message here..." v-model="textInput">
             </textarea>
 
             <button class="button is-success ml-2" :class="{ 'is-loading': loading, 'is-success': processing }"
-                    @click="getChatCompletion" id="sendCompletionRequest">Send
+              @click="getChatCompletion" id="sendCompletionRequest">Send
             </button>
           </div>
         </div>
@@ -52,9 +48,9 @@
   </div>
 </template>
 <script setup lang="ts">
-import type {HttpResponse} from "@/types";
-import {userEnum} from "@/types";
-import {userIsAuthenticated} from "~/helpers.client";
+import type { HttpResponse } from "@/types";
+import { userEnum } from "@/types";
+import { userIsAuthenticated } from "~/helpers.client";
 
 const mainColumn = ref<HTMLElement | null>(null)
 
@@ -82,7 +78,6 @@ async function fetchMessages() {
   prompt.messages = await useFetch('/api/chat/get').then(res => {
     if (!res) return []
     if (!res.data.value) return []
-    console.log(res.data.value)
     if (res.data.value.statusCode === 200) return JSON.parse(res.data.value.body?.chats || '[]')
     else return []
   }).catch(err => {
@@ -96,7 +91,7 @@ fetchMessages()
 const decoder = new TextDecoder()
 
 async function readStream(reader: ReadableStreamDefaultReader, callback: Function | null = null) {
-  const {done, value} = await reader.read()
+  const { done, value } = await reader.read()
 
   if (done) return
 
@@ -107,6 +102,17 @@ async function readStream(reader: ReadableStreamDefaultReader, callback: Functio
   await readStream(reader, callback)
 }
 
+async function flagChat() {
+await storeChat()
+  const response = await useFetch('/api/chat/flag').then(res => res.data.value)
+  console.log(response)
+  
+  if (response.statusCode === 200) {
+    console.warn('Chat flagged')
+  } else {
+    console.error('Error flagging chat')
+  }
+}
 
 async function getChatCompletion() {
   loading.value = true;
@@ -144,10 +150,10 @@ async function getChatCompletion() {
     await readStream(streamReader, (text: string) => {
       try {
         const data = text
-            .replace(/\n/g, '')
-            .replace(/}{/g, '}\n{')
-            .split('\n')
-            .filter(line => line !== '')
+          .replace(/\n/g, '')
+          .replace(/}{/g, '}\n{')
+          .split('\n')
+          .filter(line => line !== '')
         res = data.map(line => JSON.parse(line))
         for (const response of res) {
           if (response.statusCode === 201) {
@@ -156,6 +162,9 @@ async function getChatCompletion() {
             alert('Error from server')
             console.error(response.body)
             reject(response.body)
+          } else if (response.statusCode === 210) {
+            console.log("Flagged Chat")
+            flagChat()
           }
         }
       } catch (error) {
@@ -178,6 +187,14 @@ async function getChatCompletion() {
 
   prompt.messages.push(newMessage)
 
+
+}
+
+function scrollChatBottom() {
+  if (!mainColumn.value) return
+  mainColumn.value.scrollTop = mainColumn.value.scrollHeight
+}
+async function storeChat(){
   await $fetch('/api/chat/store', {
     method: 'POST',
     body: JSON.stringify({
@@ -186,18 +203,12 @@ async function getChatCompletion() {
     })
   })
 }
-
-function scrollChatBottom() {
-  if (!mainColumn.value) return
-  mainColumn.value.scrollTop = mainColumn.value.scrollHeight
-}
-
 async function clearChats() {
   const response = await $fetch('/api/chat/clear').then(
-      res => {
-        console.log(res)
-        return res
-      })
+    res => {
+      console.log(res)
+      return res
+    })
 
   if (response.statusCode === 200) {
     prompt.messages = []

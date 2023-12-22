@@ -3,6 +3,7 @@ CREATE TABLE `appointment` (
 	`student_id` int NOT NULL,
 	`counselor_id` int NOT NULL,
 	`appointment_date_time` datetime NOT NULL,
+	`status` int NOT NULL DEFAULT 0,
 	`created_at` datetime NOT NULL DEFAULT CURRENT_TIMESTAMP,
 	CONSTRAINT `appointment_id` PRIMARY KEY(`id`)
 );
